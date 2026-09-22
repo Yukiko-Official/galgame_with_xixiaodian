@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../services/assistant_service.dart';
+import '../services/settings_service.dart';
 import 'assistant_config_page.dart';
 
 /// 助手聊天页。
@@ -20,11 +21,14 @@ class _AssistantPageState extends State<AssistantPage> {
   void initState() {
     super.initState();
     _service.addListener(_onChanged);
+    // 彩蛋会改标题上的名字
+    SettingsService.instance.addListener(_onChanged);
   }
 
   @override
   void dispose() {
     _service.removeListener(_onChanged);
+    SettingsService.instance.removeListener(_onChanged);
     _input.dispose();
     _scroll.dispose();
     super.dispose();
@@ -87,7 +91,7 @@ class _AssistantPageState extends State<AssistantPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('助手'),
+        title: Text(SettingsService.instance.assistantName),
         actions: <Widget>[
           IconButton(
             tooltip: '清空对话',
@@ -95,7 +99,7 @@ class _AssistantPageState extends State<AssistantPage> {
             icon: const Icon(Icons.delete_sweep_outlined),
           ),
           IconButton(
-            tooltip: '助手配置',
+            tooltip: '${SettingsService.instance.assistantName}配置',
             onPressed: _openConfig,
             icon: const Icon(Icons.tune),
           ),
@@ -166,7 +170,9 @@ class _AssistantPageState extends State<AssistantPage> {
             ),
             const SizedBox(height: 16),
             Text(
-              _service.isConfigured ? '有什么想问的？' : '先去「助手配置」挑个模型',
+              _service.isConfigured
+                  ? '有什么想问的？'
+                  : '先去「${SettingsService.instance.assistantName}配置」挑个模型',
               style: const TextStyle(color: Colors.grey),
             ),
           ],

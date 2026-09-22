@@ -11,8 +11,8 @@ void main() {
     expect(find.text('课表'), findsOneWidget);
     expect(find.text('培养方案'), findsOneWidget);
     expect(find.text('设置'), findsOneWidget);
-    // 「助手」会出现两次：顶部标题和底部入口
-    expect(find.text('助手'), findsNWidgets(2));
+    // 「西小电」会出现两次：顶部标题和底部入口
+    expect(find.text('西小电'), findsNWidgets(2));
 
     // 默认显示助手页（看输入框在不在）
     expect(find.text('问点什么…'), findsOneWidget);

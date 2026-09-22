@@ -1,17 +1,99 @@
-# galgame_with_xixiaodian
+# 西小电物语
 
-A new Flutter project.
+西安电子科技大学学生的校园助手 App：查培养方案、看课表、跟西小电聊天。
 
-## Getting Started
+> 非官方工具，数据都来自学校自己的系统。仅供个人学习使用，请勿用于其他用途。
 
-This project is a starting point for a Flutter application.
+## 功能
 
-A few resources to get you started if this is your first Flutter project:
+### 培养方案
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+- 复用统一身份认证的登录态，直接进一站式服务大厅的「个人方案查询」应用，把整棵培养方案树抓下来
+- 展示成 Markdown 风格的清单：模块按层级缩进，每门课前面一个**能打勾的方框**
+- 顶部固定一条进度：`已修 x / y 学分` + 进度条。分母取方案标题上标的那个数字（比如「智能科学与技术 157」里的 157），因为方案里有些模块是并列好几个选项的（思政那类），照课程一门门累加会偏大
+- **英语分级**：初 / 中 / 高三档可切。只有基础课模块跟着分档走，选修课的三个班是同一套，不参与筛选
+- 模块可逐个折叠，也能一键全部收起 / 展开。默认只展开顶层
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+### 课表
+
+- 主页是**当天的时间轴**：左边开始时间，中间圆点连线，右边课程卡片（课程名、时间段、节次、教室·老师）
+- 点课程卡片或右上「周课表」进**周网格**，可以左右切周，进来自动定位到今天那一列
+
+### 西小电
+
+- 内置人设提示词，配置页里可以改，也能一键恢复默认
+- 支持 DeepSeek / 智谱 GLM / 通义千问 / OpenAI，另外有个「自定义」可以填任意 OpenAI 兼容地址
+- 流式输出，回复边收边显示；带多轮上下文；回复可以长按选中复制
+- 每次对话会带上你**当前的课表**（含今天日期和当前周次），所以问「明天有什么课」「周三下午几点下课」它能直接答
+- 配置页有个「测试连通」，会真的发一条请求过去看看通不通
+
+### 其他
+
+- **主题**：跟随系统 / 浅色 / 深色
+- **清除本地缓存**：清掉抓下来的培养方案和课表，打过的勾会保留
+- **彩蛋**：连点五次设置页的「版本」，自己试试看
+
+## 环境
+
+```
+Flutter 3.47.x (stable)
+Dart 3.13.x
+只针对 Android（minSdk 按 Flutter 默认，已在 Android 13 真机上验证）
+```
+
+主要依赖：
+
+| 包 | 用途 |
+| --- | --- |
+| `flutter_inappwebview` | 内嵌浏览器做登录、以及注入脚本抓教务数据 |
+| `flutter_secure_storage` | 存登录 Cookie、各账号的数据缓存 |
+| `http` | 西小电发请求、读流式响应 |
+
+## 构建
+
+```bash
+flutter pub get
+
+# 开发调试（能看到日志和热重载）
+flutter run -d <设备号>
+
+# 打 release 包，按 CPU 架构拆开，体积小很多
+flutter build apk --release --split-per-abi
+# 产物在 build/app/outputs/flutter-apk/，真机装 app-arm64-v8a-release.apk
+```
+
+换应用图标：把新图放项目根目录命名为 `icon.jpg`，然后
+
+```bash
+dart run flutter_launcher_icons
+```
+
+## 目录结构
+
+```
+lib/
+├── main.dart                      入口、底部导航、设置页
+├── pages/
+│   ├── login_page.dart            内嵌浏览器登录
+│   ├── plan_page.dart             培养方案（清单 + 勾选 + 折叠）
+│   ├── timetable_page.dart        课表主页（当天时间轴）
+│   ├── timetable_grid_page.dart   周课表网格
+│   ├── assistant_page.dart        西小电聊天
+│   └── assistant_config_page.dart 西小电配置
+└── services/
+    ├── auth_service.dart          登录态、Cookie、学号
+    ├── plan_service.dart          培养方案抓取 + 解析 + 缓存
+    ├── plan_scripts.dart          培养方案用的注入脚本
+    ├── timetable_service.dart     课表抓取 + 解析 + 缓存
+    ├── timetable_scripts.dart     课表用的注入脚本
+    ├── assistant_service.dart     模型配置 + 流式聊天
+    └── settings_service.dart      主题、彩蛋
+```
+
+（数据都按账号隔离：缓存 key 后面拼学号，换账号不会串数据。）
+
+## 备注
+
+`android/gradle.properties` 里有一行 `android.r8.proguardAndroidTxt.disallowed=false`，
+是为了绕过 AGP 9 禁用了旧 proguard 文件写法的限制（`flutter_inappwebview` 目前还在用旧写法）。
+等插件适配之后可以删掉。

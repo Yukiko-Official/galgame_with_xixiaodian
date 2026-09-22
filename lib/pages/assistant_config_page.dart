@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 
 import '../services/assistant_service.dart';
+import '../services/settings_service.dart';
 
-/// 助手配置：选服务商、填 Key、选模型。
+/// 西小电配置：选服务商、填 Key、选模型。
 class AssistantConfigPage extends StatefulWidget {
   const AssistantConfigPage({super.key});
 
@@ -23,6 +24,9 @@ class _AssistantConfigPageState extends State<AssistantConfigPage> {
   late final TextEditingController _modelController = TextEditingController(
     text: _service.model,
   );
+  late final TextEditingController _promptController = TextEditingController(
+    text: _service.systemPrompt,
+  );
 
   bool _testing = false;
   String? _testResult;
@@ -32,6 +36,7 @@ class _AssistantConfigPageState extends State<AssistantConfigPage> {
     _keyController.dispose();
     _baseUrlController.dispose();
     _modelController.dispose();
+    _promptController.dispose();
     super.dispose();
   }
 
@@ -46,6 +51,7 @@ class _AssistantConfigPageState extends State<AssistantConfigPage> {
       apiKey: _keyController.text,
       baseUrl: _baseUrlController.text,
       model: _modelController.text,
+      systemPrompt: _promptController.text,
     );
     if (mounted) {
       ScaffoldMessenger.of(
@@ -65,6 +71,7 @@ class _AssistantConfigPageState extends State<AssistantConfigPage> {
       apiKey: _keyController.text,
       baseUrl: _baseUrlController.text,
       model: _modelController.text,
+      systemPrompt: _promptController.text,
     );
     final String result = await _service.testConnection();
     if (!mounted) {
@@ -81,7 +88,7 @@ class _AssistantConfigPageState extends State<AssistantConfigPage> {
     final AssistantProvider selected = _selected;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('助手配置'),
+        title: Text('${SettingsService.instance.assistantName}配置'),
         actions: <Widget>[
           TextButton(onPressed: _save, child: const Text('保存')),
         ],
@@ -165,6 +172,28 @@ class _AssistantConfigPageState extends State<AssistantConfigPage> {
               ],
             ),
           ],
+          const SizedBox(height: 24),
+          Row(
+            children: <Widget>[
+              _label('人设提示词'),
+              const Spacer(),
+              TextButton(
+                onPressed: () => setState(
+                  () => _promptController.text = defaultSystemPrompt,
+                ),
+                child: const Text('恢复默认'),
+              ),
+            ],
+          ),
+          TextField(
+            controller: _promptController,
+            minLines: 6,
+            maxLines: 14,
+            decoration: const InputDecoration(
+              border: OutlineInputBorder(),
+              hintText: '给西小电的 system prompt',
+            ),
+          ),
           const SizedBox(height: 24),
           Row(
             children: <Widget>[

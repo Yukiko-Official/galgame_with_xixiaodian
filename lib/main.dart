@@ -7,6 +7,7 @@ import 'pages/plan_page.dart';
 import 'pages/timetable_page.dart';
 import 'services/assistant_service.dart';
 import 'services/auth_service.dart';
+import 'services/notification_service.dart';
 import 'services/plan_service.dart';
 import 'services/settings_service.dart';
 import 'services/timetable_service.dart';
@@ -16,10 +17,16 @@ Future<void> main() async {
   await AuthService.instance.restore();
   await SettingsService.instance.restore();
   await AssistantService.instance.restore();
+  await NotificationService.instance.init();
   // 上次登录过的话，把该账号的缓存数据恢复出来
   if (AuthService.instance.isLoggedIn) {
     await PlanService.instance.onLoginSuccess();
     await TimetableService.instance.onLoginSuccess();
+  }
+  // 手上有课表就顺手把上课提醒重排一遍（系统重启后会丢排期）
+  final TimetableData? timetable = TimetableService.instance.data;
+  if (timetable != null) {
+    await NotificationService.instance.scheduleClassReminders(timetable);
   }
   runApp(const XidianHelperApp());
 }
@@ -32,7 +39,7 @@ class XidianHelperApp extends StatelessWidget {
     return ListenableBuilder(
       listenable: SettingsService.instance,
       builder: (BuildContext context, Widget? child) => MaterialApp(
-        title: '西电助手',
+        title: '西小电物语',
         theme: ThemeData(useMaterial3: true, colorSchemeSeed: Colors.blue),
         darkTheme: ThemeData(
           useMaterial3: true,
@@ -78,12 +85,21 @@ class _HomeShellState extends State<HomeShell> {
     super.initState();
     // 登录成功后要自动跳到培养方案页
     PlanService.instance.addListener(_onPlanChanged);
+    // 彩蛋改的是西小电的名字，导航栏得跟着变
+    SettingsService.instance.addListener(_onSettingsChanged);
   }
 
   @override
   void dispose() {
     PlanService.instance.removeListener(_onPlanChanged);
+    SettingsService.instance.removeListener(_onSettingsChanged);
     super.dispose();
+  }
+
+  void _onSettingsChanged() {
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   void _onPlanChanged() {
@@ -112,23 +128,23 @@ class _HomeShellState extends State<HomeShell> {
           _index = i;
           _visited.add(i);
         }),
-        destinations: const [
+        destinations: <NavigationDestination>[
           NavigationDestination(
-            icon: Icon(Icons.smart_toy_outlined),
-            selectedIcon: Icon(Icons.smart_toy),
-            label: '助手',
+            icon: const Icon(Icons.smart_toy_outlined),
+            selectedIcon: const Icon(Icons.smart_toy),
+            label: SettingsService.instance.assistantName,
           ),
-          NavigationDestination(
+          const NavigationDestination(
             icon: Icon(Icons.calendar_month_outlined),
             selectedIcon: Icon(Icons.calendar_month),
             label: '课表',
           ),
-          NavigationDestination(
+          const NavigationDestination(
             icon: Icon(Icons.school_outlined),
             selectedIcon: Icon(Icons.school),
             label: '培养方案',
           ),
-          NavigationDestination(
+          const NavigationDestination(
             icon: Icon(Icons.settings_outlined),
             selectedIcon: Icon(Icons.settings),
             label: '设置',
@@ -140,8 +156,37 @@ class _HomeShellState extends State<HomeShell> {
 }
 
 // ---------------- 设置页 ----------------
-class SettingsPage extends StatelessWidget {
+class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
+
+  @override
+  State<SettingsPage> createState() => _SettingsPageState();
+}
+
+class _SettingsPageState extends State<SettingsPage> {
+  /// 连点版本号的次数，攒够五次解锁彩蛋。
+  int _versionTaps = 0;
+  DateTime? _lastTap;
+
+  /// 连点五次版本号解锁彩蛋。
+  void _tapVersion() {
+    final DateTime now = DateTime.now();
+    // 中间隔太久就重新数
+    if (_lastTap == null ||
+        now.difference(_lastTap!) > const Duration(seconds: 3)) {
+      _versionTaps = 0;
+    }
+    _lastTap = now;
+    _versionTaps++;
+    if (_versionTaps < 5) {
+      return;
+    }
+    _versionTaps = 0;
+    SettingsService.instance.unlockEasterEgg();
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('彩蛋已解锁')));
+  }
 
   /// 打开内嵌浏览器完成统一身份认证登录。
   Future<void> _openLogin(BuildContext context) async {
@@ -233,10 +278,12 @@ class SettingsPage extends StatelessWidget {
                   onTap: () => _logout(context),
                 ),
               const Divider(),
-              _sectionTitle('助手'),
+              _sectionTitle(SettingsService.instance.assistantName),
               ListTile(
                 leading: const Icon(Icons.smart_toy_outlined),
-                title: const Text('助手配置'),
+                title: Text(
+                  '${SettingsService.instance.assistantName}配置',
+                ),
                 subtitle: Text(
                   AssistantService.instance.isConfigured
                       ? '${AssistantService.instance.provider.name}'
@@ -250,6 +297,20 @@ class SettingsPage extends StatelessWidget {
                         const AssistantConfigPage(),
                   ),
                 ),
+              ),
+              const Divider(),
+              _sectionTitle('提醒'),
+              SwitchListTile(
+                secondary: const Icon(Icons.notifications_active_outlined),
+                title: const Text('上课前提醒'),
+                subtitle: const Text('课前 20 分钟提醒你去教室，只排未来一周'),
+                value: NotificationService.instance.enabled,
+                onChanged: (bool value) async {
+                  await NotificationService.instance.setEnabled(value);
+                  if (mounted) {
+                    setState(() {});
+                  }
+                },
               ),
               const Divider(),
               _sectionTitle('数据'),
@@ -273,10 +334,11 @@ class SettingsPage extends StatelessWidget {
               ),
               const Divider(),
               _sectionTitle('关于'),
-              const ListTile(
-                leading: Icon(Icons.info_outline),
-                title: Text('版本'),
-                subtitle: Text('0.1.0'),
+              ListTile(
+                leading: const Icon(Icons.info_outline),
+                title: const Text('版本'),
+                subtitle: const Text('0.1.0'),
+                onTap: _tapVersion,
               ),
               ListTile(
                 leading: const Icon(Icons.code),
@@ -284,10 +346,22 @@ class SettingsPage extends StatelessWidget {
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () => showLicensePage(
                   context: context,
-                  applicationName: '西电助手',
+                  applicationName: '西小电物语',
                   applicationVersion: '0.1.0',
                 ),
               ),
+              if (SettingsService.instance.easterEggUnlocked) ...[
+                const Divider(),
+                _sectionTitle('彩蛋'),
+                SwitchListTile(
+                  secondary: const Icon(Icons.celebration_outlined),
+                  title: const Text('嬉笑癫模式'),
+                  subtitle: const Text('把「西小电」显示成「嬉笑癫」'),
+                  value: SettingsService.instance.easterEgg,
+                  onChanged: (bool value) =>
+                      SettingsService.instance.setEasterEgg(value),
+                ),
+              ],
               const SizedBox(height: 24),
             ],
           );

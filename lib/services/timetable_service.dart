@@ -367,6 +367,90 @@ class TimetableService extends ChangeNotifier {
     } catch (_) {}
   }
 
+  /// 把整学期的课表讲成一段文字，给西小电当参考。
+  String toPlainText() {
+    final TimetableData? data = _data;
+    if (data == null) {
+      return '';
+    }
+    final StringBuffer buffer = StringBuffer();
+    final DateTime now = DateTime.now();
+    buffer.writeln(
+      '今天是 ${now.year}年${now.month}月${now.day}日'
+      '（${_dayNames[now.weekday - 1]}），当前是第 ${data.weekOf(now)} 周。',
+    );
+    buffer.writeln(
+      '学期 ${data.semesterCode}，共 ${data.weekCount} 周，'
+      '第一周从 ${data.termStart.month}月${data.termStart.day}日 开始。',
+    );
+
+    for (int day = 1; day <= 7; day++) {
+      final List<CourseArrangement> items =
+          data.arrangements.where((CourseArrangement item) => item.day == day).toList()
+            ..sort(
+              (CourseArrangement a, CourseArrangement b) =>
+                  a.startSection.compareTo(b.startSection),
+            );
+      if (items.isEmpty) {
+        continue;
+      }
+      buffer.writeln('${_dayNames[day - 1]}：');
+      for (final CourseArrangement item in items) {
+        final CourseInfo? course = item.courseIndex < data.courses.length
+            ? data.courses[item.courseIndex]
+            : null;
+        final String name = course == null || course.name.isEmpty
+            ? '（未知课程）'
+            : course.name;
+        final String time =
+            ClassSchedule.rangeOf(item.startSection, item.endSection) ?? '';
+        buffer.writeln(
+          '  - ${time.isEmpty ? '' : '$time '}$name'
+          '（第${item.startSection}-${item.endSection}节，'
+          '${weekSummary(item.weekBits)}）'
+          '${item.classroom == null ? '' : ' ${item.classroom}'}'
+          '${item.teacher == null ? '' : ' ${item.teacher}'}',
+        );
+      }
+    }
+
+    if (data.notArranged.isNotEmpty) {
+      buffer.writeln(
+        '还没排时间的课：'
+        '${data.notArranged.map((CourseInfo c) => c.name).join('、')}',
+      );
+    }
+    return buffer.toString();
+  }
+
+  static const List<String> _dayNames = <String>[
+    '周一',
+    '周二',
+    '周三',
+    '周四',
+    '周五',
+    '周六',
+    '周日',
+  ];
+
+  /// 把周次位图写成「1-8,10周」这种给人看的说法。
+  static String weekSummary(String bits) {
+    final List<String> parts = <String>[];
+    int start = -1;
+    for (int i = 0; i <= bits.length; i++) {
+      final bool on = i < bits.length && bits[i] == '1';
+      if (on && start < 0) {
+        start = i;
+      } else if (!on && start >= 0) {
+        final int from = start + 1;
+        final int to = i;
+        parts.add(from == to ? '$from' : '$from-$to');
+        start = -1;
+      }
+    }
+    return parts.isEmpty ? '' : '第 ${parts.join(',')} 周';
+  }
+
   /// 在 [controller] 里完整走一遍抓取流程。
   Future<void> fetch(InAppWebViewController controller) async {
     if (_loading) {
