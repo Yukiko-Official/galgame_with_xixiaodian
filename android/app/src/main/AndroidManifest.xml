@@ -38,6 +38,12 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
+        <!-- 桌宠用的 flutter_live2d 走 hybrid composition 的 TextureView，在 Impeller
+             下渲染结果合成不到屏幕上（GL 一直在画，只是看不见），只能退回旧的 OpenGL
+             后端。等插件适配 Impeller 之后可以删掉这条。 -->
+        <meta-data
+            android:name="io.flutter.embedding.android.EnableImpeller"
+            android:value="false" />
         <!-- flutter_local_notifications：到点弹通知，以及重启后恢复排期 -->
         <receiver
             android:exported="false"

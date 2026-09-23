@@ -1,0 +1,33 @@
+{
+  "buildFiles": [
+    "D:\\PRO\\galgame_with_xixiaodian\\third_party\\flutter_live2d\\android\\CMakeLists.txt"
+  ],
+  "cleanCommandsComponents": [
+    [
+      "C:\\Users\\Aimer\\AppData\\Local\\Android\\Sdk\\cmake\\3.22.1\\bin\\ninja.exe",
+      "-C",
+      "D:\\PRO\\galgame_with_xixiaodian\\third_party\\flutter_live2d\\android\\.cxx\\Debug\\37273l3z\\x86_64",
+      "clean"
+    ]
+  ],
+  "buildTargetsCommandComponents": [
+    "C:\\Users\\Aimer\\AppData\\Local\\Android\\Sdk\\cmake\\3.22.1\\bin\\ninja.exe",
+    "-C",
+    "D:\\PRO\\galgame_with_xixiaodian\\third_party\\flutter_live2d\\android\\.cxx\\Debug\\37273l3z\\x86_64",
+    "{LIST_OF_TARGETS_TO_BUILD}"
+  ],
+  "libraries": {
+    "CubismFramework::@6890427a1f51a3e7e1df": {
+      "artifactName": "CubismFramework",
+      "abi": "x86_64",
+      "output": "D:\\PRO\\galgame_with_xixiaodian\\third_party\\flutter_live2d\\android\\.cxx\\Debug\\37273l3z\\x86_64\\libCubismFramework.a",
+      "runtimeFiles": []
+    },
+    "flutter_live2d::@6890427a1f51a3e7e1df": {
+      "artifactName": "flutter_live2d",
+      "abi": "x86_64",
+      "output": "D:\\PRO\\galgame_with_xixiaodian\\build\\flutter_live2d\\intermediates\\cxx\\Debug\\37273l3z\\obj\\x86_64\\libflutter_live2d.so",
+      "runtimeFiles": []
+    }
+  }
+}

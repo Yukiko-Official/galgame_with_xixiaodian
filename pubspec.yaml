@@ -39,6 +39,12 @@ dependencies:
   http: ^1.6.0
   flutter_local_notifications: ^22.3.1
   timezone: ^0.11.1
+  # 助手页的桌宠：原生 OpenGL 渲染 Cubism 模型。
+  # 用的是项目里的 fork 版（third_party/flutter_live2d）。原版初始化时会把所有混合模式
+  # 组合的着色器（16×5×6 = 474 个）全部编译一遍，进助手页要等 4 秒多；fork 里改成
+  # 「用到哪个才编译哪个」，实际只编几个。详见 third_party/flutter_live2d/README-fork.md
+  flutter_live2d:
+    path: third_party/flutter_live2d
 
 dev_dependencies:
   flutter_test:
@@ -62,6 +68,17 @@ flutter:
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
+
+  # 桌宠模型 ariu。表情在 model3.json 的 Expressions 里声明，文件都放在模型根目录。
+  # 纹理本来是这个模型自带的 4096，缩到了 2048：显示区域才 1080px 宽，4096 纯属浪费，
+  # 而 4 张 4096 解码成 RGBA 要 256MB，开机加载要等 6 秒多。原始 4096 的图还在根目录的
+  # ariu/ 里，想换回去把图放回来、改 model3.json 和这里就行。
+  # 子目录要逐个列出来，assets 的通配只覆盖当前层。
+  # （Haru 那套还留在 assets/live2d/haru/，没在这里声明所以不会打进包里，
+  #   想换回去把下面两行换成 haru 的路径即可。）
+  assets:
+    - assets/live2d/ariu/
+    - assets/live2d/ariu/ariu.2048/
 
 # 应用图标：源图是项目根目录的 icon.jpg，跑
 # `dart run flutter_launcher_icons` 生成 Android 各尺寸

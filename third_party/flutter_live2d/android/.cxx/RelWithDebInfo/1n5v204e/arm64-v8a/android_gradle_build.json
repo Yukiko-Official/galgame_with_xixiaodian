@@ -1,0 +1,44 @@
+{
+  "buildFiles": [
+    "D:\\PRO\\galgame_with_xixiaodian\\third_party\\flutter_live2d\\android\\CMakeLists.txt"
+  ],
+  "cleanCommandsComponents": [
+    [
+      "C:\\Users\\Aimer\\AppData\\Local\\Android\\Sdk\\cmake\\3.22.1\\bin\\ninja.exe",
+      "-C",
+      "D:\\PRO\\galgame_with_xixiaodian\\third_party\\flutter_live2d\\android\\.cxx\\RelWithDebInfo\\1n5v204e\\arm64-v8a",
+      "clean"
+    ]
+  ],
+  "buildTargetsCommandComponents": [
+    "C:\\Users\\Aimer\\AppData\\Local\\Android\\Sdk\\cmake\\3.22.1\\bin\\ninja.exe",
+    "-C",
+    "D:\\PRO\\galgame_with_xixiaodian\\third_party\\flutter_live2d\\android\\.cxx\\RelWithDebInfo\\1n5v204e\\arm64-v8a",
+    "{LIST_OF_TARGETS_TO_BUILD}"
+  ],
+  "libraries": {
+    "CubismFramework::@6890427a1f51a3e7e1df": {
+      "toolchain": "toolchain",
+      "abi": "arm64-v8a",
+      "artifactName": "CubismFramework",
+      "output": "D:\\PRO\\galgame_with_xixiaodian\\third_party\\flutter_live2d\\android\\.cxx\\RelWithDebInfo\\1n5v204e\\arm64-v8a\\libCubismFramework.a"
+    },
+    "flutter_live2d::@6890427a1f51a3e7e1df": {
+      "toolchain": "toolchain",
+      "abi": "arm64-v8a",
+      "artifactName": "flutter_live2d",
+      "output": "D:\\PRO\\galgame_with_xixiaodian\\build\\flutter_live2d\\intermediates\\cxx\\RelWithDebInfo\\1n5v204e\\obj\\arm64-v8a\\libflutter_live2d.so",
+      "runtimeFiles": []
+    }
+  },
+  "toolchains": {
+    "toolchain": {
+      "cCompilerExecutable": "C:\\Users\\Aimer\\AppData\\Local\\Android\\Sdk\\ndk\\27.2.12479018\\toolchains\\llvm\\prebuilt\\windows-x86_64\\bin\\clang.exe",
+      "cppCompilerExecutable": "C:\\Users\\Aimer\\AppData\\Local\\Android\\Sdk\\ndk\\27.2.12479018\\toolchains\\llvm\\prebuilt\\windows-x86_64\\bin\\clang++.exe"
+    }
+  },
+  "cFileExtensions": [],
+  "cppFileExtensions": [
+    "cpp"
+  ]
+}

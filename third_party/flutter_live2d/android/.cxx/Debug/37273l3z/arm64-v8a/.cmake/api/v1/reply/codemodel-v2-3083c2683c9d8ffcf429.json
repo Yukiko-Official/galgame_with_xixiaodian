@@ -1,0 +1,69 @@
+{
+	"configurations" : 
+	[
+		{
+			"directories" : 
+			[
+				{
+					"build" : ".",
+					"jsonFile" : "directory-.-Debug-d0094a50bb2071803777.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.6.0"
+					},
+					"projectIndex" : 0,
+					"source" : ".",
+					"targetIndexes" : 
+					[
+						0,
+						1
+					]
+				}
+			],
+			"name" : "Debug",
+			"projects" : 
+			[
+				{
+					"directoryIndexes" : 
+					[
+						0
+					],
+					"name" : "flutter_live2d",
+					"targetIndexes" : 
+					[
+						0,
+						1
+					]
+				}
+			],
+			"targets" : 
+			[
+				{
+					"directoryIndex" : 0,
+					"id" : "CubismFramework::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-CubismFramework-Debug-470a18ccf02ca8f9437c.json",
+					"name" : "CubismFramework",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "flutter_live2d::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-flutter_live2d-Debug-85af4f28bb4dfa06f0b4.json",
+					"name" : "flutter_live2d",
+					"projectIndex" : 0
+				}
+			]
+		}
+	],
+	"kind" : "codemodel",
+	"paths" : 
+	{
+		"build" : "D:/PRO/galgame_with_xixiaodian/third_party/flutter_live2d/android/.cxx/Debug/37273l3z/arm64-v8a",
+		"source" : "D:/PRO/galgame_with_xixiaodian/third_party/flutter_live2d/android"
+	},
+	"version" : 
+	{
+		"major" : 2,
+		"minor" : 3
+	}
+}

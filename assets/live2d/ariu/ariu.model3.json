@@ -1,0 +1,45 @@
+{
+	"Version": 3,
+	"FileReferences": {
+		"Moc": "ariu.moc3",
+		"Textures": [
+			"ariu.2048/texture_00.png",
+			"ariu.2048/texture_01.png",
+			"ariu.2048/texture_02.png",
+			"ariu.2048/texture_03.png"
+		],
+		"Physics": "ariu.physics3.json",
+		"DisplayInfo": "ariu.cdi3.json",
+		"Expressions": [
+			{ "Name": "neutral", "File": "neutral.exp3.json" },
+			{ "Name": "happy", "File": "love_eyes.exp3.json" },
+			{ "Name": "sad", "File": "neutral.exp3.json" },
+			{ "Name": "angry", "File": "dark.exp3.json" },
+			{ "Name": "surprised", "File": "neutral.exp3.json" },
+			{ "Name": "shy", "File": "love_eyes.exp3.json" },
+			{ "Name": "confused", "File": "dizzy.exp3.json" },
+			{ "Name": "hat", "File": "hat.exp3.json" },
+			{ "Name": "coat_off", "File": "coat_off.exp3.json" },
+			{ "Name": "skirt", "File": "skirt.exp3.json" },
+			{ "Name": "jk_bag", "File": "jk_bag.exp3.json" },
+			{ "Name": "gamepad", "File": "gamepad.exp3.json" },
+			{ "Name": "ponytail_l_hide", "File": "ponytail_l_hide.exp3.json" },
+			{ "Name": "ponytail_r_hide", "File": "ponytail_r_hide.exp3.json" }
+		]
+	},
+	"Groups": [
+		{
+			"Target": "Parameter",
+			"Name": "LipSync",
+			"Ids": []
+		},
+		{
+			"Target": "Parameter",
+			"Name": "EyeBlink",
+			"Ids": [
+				"ParamEyeLOpen",
+				"ParamEyeROpen"
+			]
+		}
+	]
+}

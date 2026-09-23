@@ -1,0 +1,4 @@
+D:/PRO/galgame_with_xixiaodian/third_party/flutter_live2d/android/.cxx/Debug/37273l3z/arm64-v8a/CMakeFiles/CubismFramework.dir
+D:/PRO/galgame_with_xixiaodian/third_party/flutter_live2d/android/.cxx/Debug/37273l3z/arm64-v8a/CMakeFiles/flutter_live2d.dir
+D:/PRO/galgame_with_xixiaodian/third_party/flutter_live2d/android/.cxx/Debug/37273l3z/arm64-v8a/CMakeFiles/edit_cache.dir
+D:/PRO/galgame_with_xixiaodian/third_party/flutter_live2d/android/.cxx/Debug/37273l3z/arm64-v8a/CMakeFiles/rebuild_cache.dir

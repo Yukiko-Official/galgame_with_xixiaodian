@@ -1,0 +1,21 @@
+                        -HD:\PRO\galgame_with_xixiaodian\third_party\flutter_live2d\android
+-DCMAKE_SYSTEM_NAME=Android
+-DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+-DCMAKE_SYSTEM_VERSION=24
+-DANDROID_PLATFORM=android-24
+-DANDROID_ABI=arm64-v8a
+-DCMAKE_ANDROID_ARCH_ABI=arm64-v8a
+-DANDROID_NDK=C:\Users\Aimer\AppData\Local\Android\Sdk\ndk\27.2.12479018
+-DCMAKE_ANDROID_NDK=C:\Users\Aimer\AppData\Local\Android\Sdk\ndk\27.2.12479018
+-DCMAKE_TOOLCHAIN_FILE=C:\Users\Aimer\AppData\Local\Android\Sdk\ndk\27.2.12479018\build\cmake\android.toolchain.cmake
+-DCMAKE_MAKE_PROGRAM=C:\Users\Aimer\AppData\Local\Android\Sdk\cmake\3.22.1\bin\ninja.exe
+-DCMAKE_CXX_FLAGS=-std=c++14
+-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=D:\PRO\galgame_with_xixiaodian\build\flutter_live2d\intermediates\cxx\RelWithDebInfo\1n5v204e\obj\arm64-v8a
+-DCMAKE_RUNTIME_OUTPUT_DIRECTORY=D:\PRO\galgame_with_xixiaodian\build\flutter_live2d\intermediates\cxx\RelWithDebInfo\1n5v204e\obj\arm64-v8a
+-DCMAKE_BUILD_TYPE=RelWithDebInfo
+-BD:\PRO\galgame_with_xixiaodian\third_party\flutter_live2d\android\.cxx\RelWithDebInfo\1n5v204e\arm64-v8a
+-GNinja
+-DANDROID_STL=c++_shared
+-DANDROID_ARM_NEON=TRUE
+                        Build command args: []
+                        Version: 2

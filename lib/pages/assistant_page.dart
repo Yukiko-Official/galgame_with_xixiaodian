@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../services/assistant_service.dart';
 import '../services/settings_service.dart';
+import '../widgets/live2d_stage.dart';
 import 'assistant_config_page.dart';
 
 /// 助手聊天页。
@@ -108,6 +109,7 @@ class _AssistantPageState extends State<AssistantPage> {
       body: Column(
         children: <Widget>[
           if (!_service.isConfigured) _buildHint(),
+          _buildStage(),
           Expanded(
             child: _service.messages.isEmpty
                 ? _buildEmpty()
@@ -123,6 +125,28 @@ class _AssistantPageState extends State<AssistantPage> {
           _buildInput(),
         ],
       ),
+    );
+  }
+
+  /// 桌宠舞台。
+  ///
+  /// 高度按屏幕比例来：小屏不至于把聊天区挤没，大屏也看得清表情。
+  Widget _buildStage() {
+    final ColorScheme scheme = Theme.of(context).colorScheme;
+    final double height = (MediaQuery.of(context).size.height * 0.28)
+        .clamp(160.0, 300.0)
+        .toDouble();
+    return Container(
+      height: height,
+      width: double.infinity,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: <Color>[scheme.surfaceContainerHighest, scheme.surface],
+        ),
+      ),
+      child: const Live2DStage(),
     );
   }
 
@@ -157,27 +181,36 @@ class _AssistantPageState extends State<AssistantPage> {
   }
 
   Widget _buildEmpty() {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Icon(
-              Icons.smart_toy_outlined,
-              size: 64,
-              color: Colors.grey.shade400,
+    // 加了桌宠舞台之后这块地方变矮了，内容放不下就让它能滚，免得顶出黄黑条纹
+    return LayoutBuilder(
+      builder: (BuildContext context, BoxConstraints constraints) =>
+          SingleChildScrollView(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minHeight: constraints.maxHeight),
+              child: Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(32),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: <Widget>[
+                      Icon(
+                        Icons.smart_toy_outlined,
+                        size: 64,
+                        color: Colors.grey.shade400,
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        _service.isConfigured
+                            ? '有什么想问的？'
+                            : '先去「${SettingsService.instance.assistantName}配置」挑个模型',
+                        style: const TextStyle(color: Colors.grey),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             ),
-            const SizedBox(height: 16),
-            Text(
-              _service.isConfigured
-                  ? '有什么想问的？'
-                  : '先去「${SettingsService.instance.assistantName}配置」挑个模型',
-              style: const TextStyle(color: Colors.grey),
-            ),
-          ],
-        ),
-      ),
+          ),
     );
   }
 

@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 
+import 'live2d_actor.dart';
 import 'timetable_service.dart';
 
 /// 一个服务商预设。
@@ -81,6 +82,26 @@ const String defaultSystemPrompt = '''
 # 系统参数
 Frequency Penalty=0.8；Presence Penalty=0.8；Temperature=1.5
 ''';
+
+/// 告诉模型它能指挥桌面上的桌宠。
+///
+/// 这段是 App 和桌宠之间的协议，单独拼在 [defaultSystemPrompt] 后面而不是写进
+/// 它里面——人设提示词是留给自己改的，改掉了桌宠就不动了。
+const String live2dInstruction = '''
+----
+界面上有一个 Live2D 形象在陪你说话，它的表情由你控制。
+在回复里写下面这种标记就能指挥它，标记会被程序抹掉，用户看不见：
+
+  [act:情绪]
+
+情绪只能填这几个：neutral（平静）、happy（开心）、sad（难过）、
+angry（生气）、surprised（惊讶）、shy（害羞）、confused（困惑）
+
+写法要求：
+- 标记放在回复最开头，一条回复最多写一个。
+- 情绪跟着你的语气走：道歉用 sad、被夸了用 shy、给出坏消息用 confused、
+  讲得开心用 happy。
+- 只是简单应答的一两句话，可以不写标记。''';
 
 /// 一条聊天消息。
 class ChatMessage {
@@ -207,10 +228,13 @@ class AssistantService extends ChangeNotifier {
 
   /// 拼出这次要发给模型的 system 内容。
   ///
-  /// 人设后面接上用户当前的课表，这样问它「明天有什么课」它能直接答。
-  /// 课表还没抓到的就不带，不硬凑。
+  /// 人设后面接桌宠的控制协议，再接上用户当前的课表——这样问它「明天有什么课」
+  /// 它能直接答。课表还没抓到的就不带，不硬凑。
   String _buildSystemContent() {
-    final StringBuffer buffer = StringBuffer(_systemPrompt.trim());
+    final StringBuffer buffer = StringBuffer(_systemPrompt.trim())
+      ..writeln()
+      ..writeln()
+      ..write(live2dInstruction);
 
     final String timetable = TimetableService.instance.toPlainText().trim();
     if (timetable.isNotEmpty) {
@@ -226,10 +250,11 @@ class AssistantService extends ChangeNotifier {
     return buffer.toString();
   }
 
-  /// 清掉聊天记录。
+  /// 清掉聊天记录，桌宠也跟着回到平静。
   void clearMessages() {
     _messages.clear();
     _error = null;
+    Live2DActor.instance.reset();
     notifyListeners();
   }
 
@@ -251,6 +276,23 @@ class AssistantService extends ChangeNotifier {
     _messages.add(reply);
     _sending = true;
     notifyListeners();
+
+    // 边吐字边解析：reply.content 只留能显示的部分，[act:...] 标记转成指令发给
+    // 桌宠。handled 记着已经执行过几条，不然同一句「笑一下」会随着后面的分片
+    // 被反复触发。
+    final StringBuffer raw = StringBuffer();
+    int handled = 0;
+    void syncActor({required bool streaming}) {
+      final (String visible, List<Live2DAct> acts) = Live2DActor.parse(
+        raw.toString(),
+        streaming: streaming,
+      );
+      reply.content = visible;
+      for (final Live2DAct act in acts.skip(handled)) {
+        Live2DActor.instance.apply(act);
+      }
+      handled = acts.length;
+    }
 
     final http.Client client = http.Client();
     try {
@@ -315,7 +357,8 @@ class AssistantService extends ChangeNotifier {
               <String, dynamic>{};
           final Object? piece = delta['content'];
           if (piece is String && piece.isNotEmpty) {
-            reply.content += piece;
+            raw.write(piece);
+            syncActor(streaming: true);
             notifyListeners();
           }
         } catch (_) {
@@ -323,7 +366,9 @@ class AssistantService extends ChangeNotifier {
         }
       }
 
-      if (reply.content.isEmpty) {
+      // 收完了再解析一次，把流式时扣住的尾巴（半截标记）放出来
+      syncActor(streaming: false);
+      if (reply.content.trim().isEmpty) {
         reply.content = '（模型没有返回内容）';
       }
     } catch (e) {
