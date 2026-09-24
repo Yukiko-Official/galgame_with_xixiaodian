@@ -1,16 +1,18 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 
 import '../services/auth_service.dart';
 import '../services/plan_scripts.dart';
 import '../services/plan_service.dart';
+import '../widgets/fetch_progress.dart';
 
 /// 培养方案页。
 ///
-/// 抓取过程要在真实页面里点来点去，所以底下常驻一个 WebView：平时被内容盖住，
-/// 抓的时候露出来，方便看出卡在哪一步。
+/// 抓取过程要在真实页面里点来点去，所以底下常驻一个 WebView。它默认不出镜——抓取时
+/// 盖的是转圈动画，平时盖的是内容；要手动看页面、自己操作，就用右上角的「显示网页」。
 class PlanPage extends StatefulWidget {
   const PlanPage({super.key});
 
@@ -85,16 +87,20 @@ class _PlanPageState extends State<PlanPage> {
       appBar: AppBar(
         title: const Text('培养方案'),
         actions: <Widget>[
-          IconButton(
-            tooltip: _showWeb ? '隐藏网页' : '显示网页（可手动操作）',
-            onPressed: () => setState(() => _showWeb = !_showWeb),
-            icon: Icon(_showWeb ? Icons.visibility_off : Icons.visibility),
-          ),
-          IconButton(
-            tooltip: '把当前页面结构写进日志',
-            onPressed: _dumpPage,
-            icon: const Icon(Icons.bug_report_outlined),
-          ),
+          // 「显示网页」和「导出页面结构」都是排查问题用的，只在开发时露出来，
+          // 正式包里不该有这些入口
+          if (kDebugMode) ...[
+            IconButton(
+              tooltip: _showWeb ? '隐藏网页' : '显示网页（可手动操作）',
+              onPressed: () => setState(() => _showWeb = !_showWeb),
+              icon: Icon(_showWeb ? Icons.visibility_off : Icons.visibility),
+            ),
+            IconButton(
+              tooltip: '把当前页面结构写进日志',
+              onPressed: _dumpPage,
+              icon: const Icon(Icons.bug_report_outlined),
+            ),
+          ],
           ListenableBuilder(
             listenable: PlanService.instance,
             builder: (BuildContext context, Widget? child) {
@@ -119,16 +125,28 @@ class _PlanPageState extends State<PlanPage> {
           final PlanService service = PlanService.instance;
           return Stack(
             children: <Widget>[
-              // 一直在最底下待命，抓取时才露出来
-              Positioned.fill(child: webView!),
-              if (!service.loading && !_showWeb)
-                Positioned.fill(
-                  child: ColoredBox(
-                    color: Theme.of(context).scaffoldBackgroundColor,
-                    child: _buildContent(service),
-                  ),
+              // WebView 只在后台跑抓取脚本。它是原生 View，页面切换做过渡动画时
+              // 会浮到 Flutter 内容之上穿帮，所以除了抓取中和手动「显示网页」，
+              // 一律不画出来。
+              Positioned.fill(
+                child: Offstage(
+                  offstage: !service.loading && !_showWeb,
+                  child: webView!,
                 ),
-              if (service.loading) _buildProgress(service),
+              ),
+              if (!_showWeb) ...[
+                if (service.loading)
+                  Positioned.fill(
+                    child: FetchProgress(status: service.status),
+                  )
+                else
+                  Positioned.fill(
+                    child: ColoredBox(
+                      color: Theme.of(context).scaffoldBackgroundColor,
+                      child: _buildContent(service),
+                    ),
+                  ),
+              ],
             ],
           );
         },
@@ -320,38 +338,6 @@ class _PlanPageState extends State<PlanPage> {
               label: const Text('获取培养方案'),
             ),
           ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildProgress(PlanService service) {
-    return Positioned(
-      left: 0,
-      right: 0,
-      bottom: 0,
-      child: Material(
-        elevation: 8,
-        child: SafeArea(
-          top: false,
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: <Widget>[
-                const SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Text(
-                    service.status.isEmpty ? '正在获取…' : service.status,
-                  ),
-                ),
-              ],
-            ),
-          ),
         ),
       ),
     );

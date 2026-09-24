@@ -1,0 +1,18 @@
+{
+	"Version": 3,
+	"FileReferences": {
+		"Moc": "免费模型—奶蛙.moc3",
+		"Textures": [
+			"免费模型—奶蛙.2048/texture_00.png"
+		],
+		"Physics": "免费模型—奶蛙.physics3.json",
+		"DisplayInfo": "免费模型—奶蛙.cdi3.json"
+	},
+	"Groups": [
+		{
+			"Target": "Parameter",
+			"Name": "EyeBlink",
+			"Ids": []
+		}
+	]
+}

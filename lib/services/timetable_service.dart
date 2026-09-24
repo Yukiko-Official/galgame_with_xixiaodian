@@ -572,7 +572,7 @@ class TimetableService extends ChangeNotifier {
   /// 等页面跳转结束。被弹回统一身份认证页说明登录态没了。
   Future<bool> _waitForPageReady(
     InAppWebViewController controller, {
-    Duration timeout = const Duration(seconds: 45),
+    Duration timeout = const Duration(seconds: 60),
   }) async {
     final DateTime deadline = DateTime.now().add(timeout);
     while (DateTime.now().isBefore(deadline)) {

@@ -60,9 +60,13 @@ Future<String> _resolveModelDir(String modelDir) async {
 /// Copies every asset under [assetDir] into a per-app cache directory and
 /// returns the resolved on-disk path.
 ///
-/// A `.ready` marker file lets the function skip extraction on subsequent
-/// runs that find an already-populated directory. The cache key is the
-/// base64 of the asset directory name to avoid collisions on the disk.
+/// The directory is rebuilt on every app launch; only the in-process cache in
+/// [_resolvedAssetDirs] keeps that to a single copy per launch. An earlier
+/// version kept a `.ready` marker and skipped the copy whenever the directory
+/// was already populated — but the cache key only covers the asset directory
+/// name, so editing a model file in place (same file names, new contents) kept
+/// serving the stale copy already on disk and the change looked like it had no
+/// effect. Copying a few megabytes is cheaper than that class of bug.
 Future<String> _extractAssetDirToCache(String assetDir) async {
   final normalizedAssetDir = _ensureTrailingSlash(assetDir);
   final tempPath = await FlutterLive2dPlatform.instance.getTempDirectory();
@@ -70,11 +74,6 @@ Future<String> _extractAssetDirToCache(String assetDir) async {
     utf8.encode(normalizedAssetDir),
   ).replaceAll('=', '');
   final outDir = Directory('$tempPath/flutter_live2d_models/$key/');
-  final marker = File('${outDir.path}.ready');
-
-  if (outDir.existsSync() && marker.existsSync()) {
-    return _ensureTrailingSlash(outDir.path);
-  }
 
   final manifest = await AssetManifest.loadFromAssetBundle(rootBundle);
   final assetKeys = manifest
@@ -102,6 +101,5 @@ Future<String> _extractAssetDirToCache(String assetDir) async {
     await outFile.writeAsBytes(data.buffer.asUint8List(), flush: true);
   }
 
-  await marker.writeAsString('ok', flush: true);
   return _ensureTrailingSlash(outDir.path);
 }

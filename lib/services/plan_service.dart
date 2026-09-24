@@ -575,11 +575,7 @@ class PlanService extends ChangeNotifier {
 
       // 进来还不是培养方案页面，得再点一下那张方案卡片才出思维导图
       _setStatus('打开培养方案…');
-      final bool cardReady = await _waitFor(
-        controller,
-        PlanScripts.hasPlanCard,
-        timeout: const Duration(seconds: 35),
-      );
+      final bool cardReady = await _waitForPlanCard(controller);
       if (!cardReady) {
         final Object? pageDump = await controller.evaluateJavascript(
           source: PlanScripts.probeSearch(appName),
@@ -595,7 +591,7 @@ class PlanService extends ChangeNotifier {
       final bool ready = await _waitFor(
         controller,
         PlanScripts.hasMindNode,
-        timeout: const Duration(seconds: 40),
+        timeout: const Duration(seconds: 60),
       );
       if (!ready) {
         throw StateError('培养方案页面没能加载出来');
@@ -651,6 +647,41 @@ class PlanService extends ChangeNotifier {
         }
       } catch (_) {}
       await Future<void>.delayed(interval);
+    }
+    return false;
+  }
+
+  /// 等「培养方案卡片」出现。
+  ///
+  /// 比 [_waitFor] 多做一件事：这一跳在首次加载（WebView 里还没缓存）时容易失败，
+  /// 页面会停在 Chromium 的错误页上再也不动，干等到超时也没用——真机日志里就见过
+  /// 页面变成 `chrome-error://chromewebdata/` 之后一直卡着。所以这里顺便盯着错误页，
+  /// 遇到就重新加载一次（最多两次），而不是傻等。
+  Future<bool> _waitForPlanCard(InAppWebViewController controller) async {
+    final DateTime deadline = DateTime.now().add(const Duration(seconds: 60));
+    int reloads = 0;
+    while (DateTime.now().isBefore(deadline)) {
+      try {
+        final Object? hit = await controller.evaluateJavascript(
+          source: PlanScripts.hasPlanCard,
+        );
+        if (hit == true) {
+          return true;
+        }
+        final String current = (await controller.getUrl())?.toString() ?? '';
+        final bool stuck =
+            current.startsWith('chrome-error://') || current == 'about:blank';
+        if (stuck && reloads < 2) {
+          reloads++;
+          debugPrint('[培养方案] 页面停在「$current」，重新加载一次');
+          await controller.loadUrl(
+            urlRequest: URLRequest(url: WebUri(PlanScripts.appUrl)),
+          );
+          await Future<void>.delayed(const Duration(seconds: 2));
+          continue;
+        }
+      } catch (_) {}
+      await Future<void>.delayed(const Duration(milliseconds: 500));
     }
     return false;
   }

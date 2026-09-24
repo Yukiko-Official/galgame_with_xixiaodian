@@ -7,12 +7,13 @@ import '../services/auth_service.dart';
 import '../services/notification_service.dart';
 import '../services/timetable_scripts.dart';
 import '../services/timetable_service.dart';
+import '../widgets/fetch_progress.dart';
 import 'timetable_grid_page.dart';
 
 /// 课表页。
 ///
-/// 抓取走的是页面内的同源请求，所以底下常驻一个 WebView：平时被内容盖住，
-/// 抓的时候露出来，方便看出卡在哪一步。
+/// 抓取走的是页面内的同源请求，所以底下常驻一个 WebView。它只在后台跑脚本，界面上
+/// 不给它出镜的机会：抓取的时候盖一层转圈动画，平时盖内容。
 class TimetablePage extends StatefulWidget {
   const TimetablePage({super.key});
 
@@ -123,16 +124,28 @@ class _TimetablePageState extends State<TimetablePage> {
           final TimetableService service = TimetableService.instance;
           return Stack(
             children: <Widget>[
-              // 一直在最底下待命，抓取时才露出来
-              Positioned.fill(child: webView!),
-              if (!service.loading)
+              // 一直在树里待命，但只有抓取时才真的画出来。
+              //
+              // 不能只靠上面盖一层内容：Android 的 WebView 是个原生 View，页面跳转
+              // 做过渡动画时它会短暂浮到 Flutter 内容之上，从日课表点进周课表的那一
+              // 瞬就会露出学校的原始页面。Offstage 让它平时不参与绘制。
+              Positioned.fill(
+                child: Offstage(
+                  offstage: !service.loading,
+                  child: webView!,
+                ),
+              ),
+              if (service.loading)
+                Positioned.fill(
+                  child: FetchProgress(status: service.status),
+                )
+              else
                 Positioned.fill(
                   child: ColoredBox(
                     color: Theme.of(context).scaffoldBackgroundColor,
                     child: _buildContent(service),
                   ),
                 ),
-              if (service.loading) _buildProgress(service),
             ],
           );
         },
@@ -215,38 +228,6 @@ class _TimetablePageState extends State<TimetablePage> {
               label: const Text('获取课表'),
             ),
           ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildProgress(TimetableService service) {
-    return Positioned(
-      left: 0,
-      right: 0,
-      bottom: 0,
-      child: Material(
-        elevation: 8,
-        child: SafeArea(
-          top: false,
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: <Widget>[
-                const SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Text(
-                    service.status.isEmpty ? '正在获取…' : service.status,
-                  ),
-                ),
-              ],
-            ),
-          ),
         ),
       ),
     );

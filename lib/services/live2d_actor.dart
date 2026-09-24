@@ -2,21 +2,21 @@ import 'package:flutter/foundation.dart';
 
 /// 桌宠能表现的情绪。
 ///
-/// 下标对应 ariu 这套模型 `model3.json` 里 Expressions 的顺序。那套模型原始的配置
-/// 压根没声明表情（它是给 VTube Studio 用的，表情靠热键切），这边是后补进去的。
+/// 下标对应模型 `model3.json` 里 Expressions 的顺序。现在这套（nailong，奶蛙）只挂了
+/// 一条表情——作者给的「去水印」，它把 `ParamAngleX7`（在模型里就叫「水印开关」）加到
+/// 2.0，水印就藏起来了。所以下面全部指向 0：桌宠不会变脸，同时也保证水印一直关着。
 ///
-/// 素材不全，得留意：这套模型只有「爱心眼 / 黑化 / 圈圈眼」三个算情绪向的表情，
-/// 剩下七个都是换装。所以 sad 和 surprised 暂时都指向那个空表情（切过去等于回到
-/// 平静），happy 和 shy 共用爱心眼。想补齐的话，做几个新的 .exp3.json 挂进
-/// model3.json 再改这里就行。
+/// 想让它有表情：做几个情绪向的 .exp3.json 放进 `assets/live2d/nailong/`，挂到
+/// model3.json 的 Expressions 后面，再把下面的下标填回去。**下标 0 必须留给去水印**，
+/// 挪走它水印就会露出来（直接 `setParameter` 是没用的，会被每帧的 LoadParameters 冲掉）。
 enum Live2DEmotion {
   neutral('neutral', 0, '平静'),
-  happy('happy', 1, '开心'),
-  angry('angry', 3, '生气'),
-  sad('sad', 2, '难过'),
-  surprised('surprised', 4, '惊讶'),
-  shy('shy', 5, '害羞'),
-  confused('confused', 6, '困惑');
+  happy('happy', 0, '开心'),
+  angry('angry', 0, '生气'),
+  sad('sad', 0, '难过'),
+  surprised('surprised', 0, '惊讶'),
+  shy('shy', 0, '害羞'),
+  confused('confused', 0, '困惑');
 
   const Live2DEmotion(this.id, this.expressionIndex, this.label);
 
@@ -38,9 +38,9 @@ enum Live2DEmotion {
 
 /// 模型能播的动作组，别的名字一律不认。
 ///
-/// ariu 这套模型没带动作文件（没有 motions/ 目录），所以这里是空的——标记里就算写了
-/// 动作也播不出来，只会换表情。以后换成带动作的模型（比如 Haru 的 Idle / TapBody）
-/// 再把映射填回来。
+/// 现在这套（nailong，奶蛙）没带动作文件（没有 motions/ 目录），所以这里是空的——
+/// 标记里就算写了动作也播不出来，只会换表情。以后换成带动作的模型（比如 Haru 的
+/// Idle / TapBody）再把映射填回来。
 const Map<String, String> live2dMotionGroups = <String, String>{};
 
 /// 一次要执行的指令。
@@ -63,9 +63,9 @@ class Live2DActor extends ChangeNotifier {
   /// 全局单例，桌宠状态在 App 内共享一份。
   static final Live2DActor instance = Live2DActor._();
 
-  /// 模型放在 assets 里的位置。
-  static const String modelDir = 'assets/live2d/ariu/';
-  static const String modelFileName = 'ariu.model3.json';
+  /// 模型放在 assets 里的位置。换模型时这里和 pubspec.yaml 的 assets 要一起改。
+  static const String modelDir = 'assets/live2d/nailong/';
+  static const String modelFileName = 'nailong.model3.json';
 
   /// 回复里的控制标记，形如 `[act:happy]` 或者 `[act:angry,tap]`。
   static final RegExp _markPattern = RegExp(

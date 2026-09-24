@@ -1,0 +1,21 @@
+{
+	"Version": 3,
+	"FileReferences": {
+		"Moc": "nailong.moc3",
+		"Textures": [
+			"nailong.2048/texture_00.png"
+		],
+		"Physics": "nailong.physics3.json",
+		"DisplayInfo": "nailong.cdi3.json",
+		"Expressions": [
+			{ "Name": "remove_watermark", "File": "remove_watermark.exp3.json" }
+		]
+	},
+	"Groups": [
+		{
+			"Target": "Parameter",
+			"Name": "EyeBlink",
+			"Ids": []
+		}
+	]
+}

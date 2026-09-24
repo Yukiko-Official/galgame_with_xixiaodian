@@ -1,0 +1,12 @@
+{
+    "Type": "Live2D Expression",
+    "IsModelCustomizationExpression": false,
+    "Parameters": [
+        {
+            "Id": "ParamAngleX7",
+            "Value": 2.0,
+            "Blend": "Add"
+        }
+    ],
+    "FadeInTime": 0.0
+}
