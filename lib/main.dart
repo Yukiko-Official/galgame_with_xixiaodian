@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 import 'pages/assistant_config_page.dart';
 import 'pages/assistant_page.dart';
@@ -72,7 +75,7 @@ class _HomeShellState extends State<HomeShell> {
   /// 切回来重建更亏。所以用 IndexedStack 留着，同时又不一上来就全建。
   final Set<int> _visited = <int>{0};
 
-  // 四个页面按顺序对应下面的四个标签
+  // 页面按顺序对应下面的标签
   static const _pages = <Widget>[
     AssistantPage(),   // 0 助手
     TimetablePage(),   // 1 课表
@@ -167,6 +170,22 @@ class _SettingsPageState extends State<SettingsPage> {
   /// 连点版本号的次数，攒够五次解锁彩蛋。
   int _versionTaps = 0;
   DateTime? _lastTap;
+
+  /// App 自己的版本号（pubspec.yaml 里的 version），进页面时异步取一次。
+  String _appVersion = '';
+
+  @override
+  void initState() {
+    super.initState();
+    unawaited(_loadAppVersion());
+  }
+
+  Future<void> _loadAppVersion() async {
+    final PackageInfo info = await PackageInfo.fromPlatform();
+    if (mounted) {
+      setState(() => _appVersion = info.version);
+    }
+  }
 
   /// 连点五次版本号解锁彩蛋。
   void _tapVersion() {
@@ -337,7 +356,7 @@ class _SettingsPageState extends State<SettingsPage> {
               ListTile(
                 leading: const Icon(Icons.info_outline),
                 title: const Text('版本'),
-                subtitle: const Text('0.1.0'),
+                subtitle: Text(_appVersion.isEmpty ? '…' : _appVersion),
                 onTap: _tapVersion,
               ),
               ListTile(
@@ -347,7 +366,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 onTap: () => showLicensePage(
                   context: context,
                   applicationName: '西小电物语',
-                  applicationVersion: '0.1.0',
+                  applicationVersion: _appVersion,
                 ),
               ),
               if (SettingsService.instance.easterEggUnlocked) ...[

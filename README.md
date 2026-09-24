@@ -31,6 +31,7 @@
 
 页面上方站着一个 Live2D 形象，说话时会跟着换表情、做动作。
 
+- 模型用的是 Cubism 官方示例模型 **Haru**（表情 F01–F08，动作组 `Idle` / `TapBody`），放在 `assets/live2d/haru/`
 - 驱动方式是「回复里内嵌标记」：system 里额外拼一段协议（`live2dInstruction`），让模型在回复开头写 `[act:happy]` 或 `[act:sad,tap]`。前端边收流边解析，把标记抹掉后交给桌宠
 - 情绪只映射这七个：平静 / 开心 / 难过 / 生气 / 惊讶 / 害羞 / 困惑
 - 那段协议是单独拼在**人设提示词之外**的，所以自己改人设不会把桌宠弄哑
@@ -103,3 +104,58 @@ lib/
 ```
 
 （数据都按账号隔离：缓存 key 后面拼学号，换账号不会串数据。）
+
+## 备注
+
+`android/gradle.properties` 里有一行 `android.r8.proguardAndroidTxt.disallowed=false`，
+是为了绕过 AGP 9 禁用了旧 proguard 文件写法的限制（`flutter_inappwebview` 目前还在用旧写法）。
+等插件适配之后可以删掉。
+
+`android/build.gradle.kts` 里有一段用反射把子项目的 CMake 版本统一改成 3.22.1。原因是
+`flutter_live2d` 钉死了 3.10.2，而 Google 已经不在 SDK 里单独提供这个版本了（仓库里只剩
+`3.10.2.4988404`，目录名对不上，AGP 搜不到）。它的 CMakeLists 只要求 `>= 3.10`，所以直接用
+SDK 里现成的 3.22.1。
+
+`android/gradle.properties` 里的 `kotlin.incremental=false` 是为了绕开跨盘符的坑：pub 缓存在
+C 盘、工程在 D 盘时，Kotlin 增量编译计算源文件相对路径会抛 `IllegalArgumentException`，缓存
+写不进去，整个 Kotlin 编译就失败了。把 pub 缓存挪到和工程同一个盘（设 `PUB_CACHE`）也能解决，
+那样这行就可以删掉。
+
+`android/app/src/main/AndroidManifest.xml` 里关掉了 Impeller
+（`io.flutter.embedding.android.EnableImpeller = false`），这个不能删——删了桌宠就看不见了。
+`flutter_live2d` 走的是 hybrid composition 的 `TextureView`，在 Impeller 下 GL 明明一直在画
+（日志里每一帧都在走），但结果合成不到屏幕上，界面上干干净净什么都没有。退回旧的 OpenGL
+后端就正常了。等插件适配 Impeller 之后这条可以去掉。
+
+桌宠用的 Haru 是 Live2D 官方示例模型（来自 `Live2D/CubismWebSamples`），
+按官方的免费素材许可只能非商业使用；换模型时留意各自的授权。
+
+`android/app/src/main/assets/FrameworkShaders/` 里是从 `flutter_live2d` 抽出来的 Cubism 着色器
+源码（36 个 `.vert` / `.frag`）。插件自己没把它们打进 assets，运行时去 `FrameworkShaders/` 下面
+找却一个都找不到，着色器编译失败，模型就画不出来——而且插件把 Cubism 的日志回调留成了空函数，
+报错全被吞掉，现象就成了「加载成功但屏幕上什么都没有」。升级插件时留意这个目录要不要跟着更新。
+
+## 桌宠加载慢的原因（已解决）
+
+最早进助手页要等 6 秒多模型才出来。分段计时定位到瓶颈（Android 13 真机，ariu 模型）：
+
+| 阶段 | 耗时 |
+| --- | --- |
+| platform view 就绪 | 约 0.9s |
+| `LoadAssets`（解析 moc3） | 14ms |
+| `CreateRenderer`（**编译着色器**） | **约 4.7s** |
+| `SetupTextures`（解码纹理+传 GPU） | 422ms |
+
+问题出在 `CreateRenderer`：Cubism 初始化时会把**所有混合模式组合**的着色器一次性全编译——
+`ColorBlendMode` 16 种 × `AlphaBlendMode` 5 种 × 6 个 mask 变体 ≈ **480 个着色器程序**，
+而实际渲染只用到其中 2～4 个。
+
+解决办法是把插件 fork 进 `third_party/flutter_live2d`，改成「用到哪个才编译哪个」，
+细节见那里的 `README-fork.md`。改完实测：
+
+```
+[桌宠] 模型加载成功，总耗时 437ms      # 之前是 6425ms
+```
+
+注意**纹理不是瓶颈**：把 ariu 的纹理从 4096 缩到 2048 只省下那 422ms 里的一小部分，
+真正的收益在包体积（38.7MB → 27.6MB）。

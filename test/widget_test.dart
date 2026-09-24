@@ -7,7 +7,7 @@ void main() {
     await tester.pumpWidget(const XidianHelperApp());
     await tester.pumpAndSettle();
 
-    // 底部导航的四个入口
+    // 底部导航的入口
     expect(find.text('课表'), findsOneWidget);
     expect(find.text('培养方案'), findsOneWidget);
     expect(find.text('设置'), findsOneWidget);

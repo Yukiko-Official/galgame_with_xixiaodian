@@ -43,10 +43,8 @@ class _Live2DStageState extends State<Live2DStage> {
   }
 
   Future<void> _load() async {
-    final Stopwatch watch = Stopwatch()..start();
     try {
       await _controller.whenAttached;
-      debugPrint('[桌宠] 视图就绪 ${watch.elapsedMilliseconds}ms');
       // 原生侧有个竞态：loadModel 请求可能赶在 surface 尺寸就绪之前被处理，那时它
       // 会直接返回 false——不是路径或资源的问题。等一小会儿再试就好了。
       bool ok = false;
@@ -59,9 +57,6 @@ class _Live2DStageState extends State<Live2DStage> {
           modelFileName: Live2DActor.modelFileName,
         );
       }
-      debugPrint(
-        '[桌宠] 模型加载${ok ? '成功' : '失败'}，总耗时 ${watch.elapsedMilliseconds}ms',
-      );
       if (!mounted) {
         return;
       }
@@ -73,7 +68,6 @@ class _Live2DStageState extends State<Live2DStage> {
       // 加载这段时间里 AI 可能已经说过话了，补一次让桌宠跟上当前状态
       await _sync();
     } catch (e) {
-      debugPrint('[桌宠] 加载出错: $e');
       if (mounted) {
         setState(() => _error = '桌宠加载失败：$e');
       }
