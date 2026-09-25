@@ -1,0 +1,15 @@
+{
+  "request": {
+    "mode": "put",
+    "id": "phys_body_follow_x",
+    "name": "身体跟随X",
+    "state": "history-3fa6e475-885d-486e-b9c2-04f9667020c7",
+    "input_parameter": "ParamAngleX",
+    "output_parameter": "ParamBodyAngleX",
+    "length": 0.3,
+    "mobility": 0.65,
+    "delay": 0.6,
+    "acceleration": 0.03,
+    "output_scale": 0.18
+  }
+}

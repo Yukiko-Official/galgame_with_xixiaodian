@@ -3,6 +3,8 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
+import 'live2d_actor.dart';
+
 /// 应用级别的设置。
 class SettingsService extends ChangeNotifier {
   SettingsService._();
@@ -12,6 +14,7 @@ class SettingsService extends ChangeNotifier {
 
   static const String _themeKey = 'app_theme_mode';
   static const String _easterEggKey = 'app_easter_egg';
+  static const String _live2dModelKey = 'app_live2d_model';
 
   final FlutterSecureStorage _storage = const FlutterSecureStorage();
 
@@ -23,9 +26,13 @@ class SettingsService extends ChangeNotifier {
   /// 彩蛋现在是开着的没。
   bool _easterEgg = false;
 
+  /// 桌宠用哪套模型。
+  Live2DVariant _live2dVariant = Live2DVariant.defaultVariant;
+
   ThemeMode get themeMode => _themeMode;
   bool get easterEggUnlocked => _easterEggUnlocked;
   bool get easterEgg => _easterEgg;
+  Live2DVariant get live2dVariant => _live2dVariant;
 
   /// 西小电在界面上显示的名字，彩蛋开着就换个叫法。
   String get assistantName => _easterEgg ? '嬉笑癫' : '西小电';
@@ -55,6 +62,12 @@ class SettingsService extends ChangeNotifier {
       }
     } catch (_) {}
 
+    try {
+      _live2dVariant = Live2DVariant.byId(
+        await _storage.read(key: _live2dModelKey),
+      );
+    } catch (_) {}
+
     notifyListeners();
   }
 
@@ -67,6 +80,18 @@ class SettingsService extends ChangeNotifier {
     notifyListeners();
     try {
       await _storage.write(key: _themeKey, value: mode.name);
+    } catch (_) {}
+  }
+
+  /// 换桌宠模型，选择会存到本地。
+  Future<void> setLive2DVariant(Live2DVariant variant) async {
+    if (_live2dVariant == variant) {
+      return;
+    }
+    _live2dVariant = variant;
+    notifyListeners();
+    try {
+      await _storage.write(key: _live2dModelKey, value: variant.id);
     } catch (_) {}
   }
 

@@ -72,15 +72,21 @@ flutter:
   # the material Icons class.
   uses-material-design: true
 
-  # 桌宠模型 nailong（奶蛙）。表情在 model3.json 的 Expressions 里声明，文件都放在
-  # 模型根目录，纹理图另起一层子目录——子目录要逐个列出来，assets 的通配只覆盖当前层。
+  # 桌宠模型，可选的几个在 lib/services/live2d_actor.dart 的 Live2DVariant 里列着。
+  # 模型文件都放在各自根目录，纹理图另起一层子目录——子目录要逐个列出来，assets 的
+  # 通配只覆盖当前层。
   #
-  # 换模型时记得同步改 lib/services/live2d_actor.dart 里的 modelDir / modelFileName
-  # 和 Live2DEmotion 的表情下标。ariu 那套还留在 assets/live2d/ariu/（纹理是缩过的
-  # 2048，原始 4096 的图在根目录 ariu/），跟 haru 一样没在这里声明，不会打进包里。
+  # 两套的纹理都从自带的 4096 缩到了 2048：显示区域才 1080px 宽，4096 解码成 RGBA
+  # 纯属浪费内存。原始 4096 的图留在根目录的 ariu/ 和 xxd/ 里，想换回去把图放回来、
+  # 改 model3.json 和这里就行。
+  #
+  # 加新模型时：文件丢进 assets/live2d/<id>/，在这里补上目录，再去 Live2DVariant 加
+  # 一项。ariu 和 haru 那两套没在这里声明，不会打进包里。
   assets:
     - assets/live2d/nailong/
     - assets/live2d/nailong/nailong.2048/
+    - assets/live2d/xxd/
+    - assets/live2d/xxd/xxd.2048/
 
 # 应用图标：源图是项目根目录的 icon.jpg，跑
 # `dart run flutter_launcher_icons` 生成 Android 各尺寸

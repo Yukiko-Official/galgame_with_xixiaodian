@@ -1,0 +1,15 @@
+{
+  "request": {
+    "mode": "put",
+    "id": "phys_eye_jelly",
+    "name": "眼球果冻",
+    "state": "history-b8ad1614-b729-452a-ba3a-95a123aead54",
+    "input_parameter": "ParamAngleX",
+    "output_parameter": "ParamEyeBallForm",
+    "length": 0.18,
+    "mobility": 0.85,
+    "delay": 0.35,
+    "acceleration": 0.04,
+    "output_scale": -0.55
+  }
+}

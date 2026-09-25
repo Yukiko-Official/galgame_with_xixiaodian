@@ -1,0 +1,15 @@
+{
+  "request": {
+    "mode": "poses",
+    "viewport": {"mode": "canvas_rect", "left": 0, "top": 0, "width": 1280, "height": 1920},
+    "poses": [
+      {},
+      {"ParamMouthForm": 1.0, "ParamMouthOpenY": 0.35},
+      {"ParamEyeLOpen": 0.05},
+      {"ParamAngleX": -30.0}
+    ],
+    "columns": 2,
+    "target_long_edge": 1400,
+    "background": "checkerboard"
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "request": {
+    "mode": "poses",
+    "viewport": {"mode": "canvas_rect", "left": 0, "top": 0, "width": 1280, "height": 1920},
+    "poses": [
+      {},
+      {"ParamMouthForm": 1.0, "ParamMouthOpenY": 0.45},
+      {"ParamMouthForm": -1.0},
+      {"ParamMouthOpenY": 1.0},
+      {"ParamBrowLY": 1.0, "ParamBrowRY": 1.0},
+      {"ParamBrowLY": -1.0, "ParamBrowRY": -1.0},
+      {"ParamEyeLOpen": 0.0},
+      {"ParamEyeBallX": 1.0},
+      {"ParamAngleX": -30.0}
+    ],
+    "columns": 3,
+    "target_long_edge": 1600,
+    "background": "checkerboard"
+  }
+}

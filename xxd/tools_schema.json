@@ -1,0 +1,2485 @@
+[
+ {
+  "name": "inspect",
+  "inputSchema": {
+   "properties": {
+    "scope": {
+     "type": "string",
+     "enum": [
+      "project",
+      "settings",
+      "preview",
+      "objects",
+      "layers",
+      "parameters",
+      "physics",
+      "paths"
+     ]
+    },
+    "query": {
+     "type": "string"
+    },
+    "target": {
+     "type": "string"
+    },
+    "offset": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "limit": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 64
+    }
+   },
+   "required": [],
+   "type": "object"
+  },
+  "description": "Read project context, find objects/layers/parameters, or inspect one kind:id's direct axes, channels and parent. No point arrays. Query and page before expanding.",
+  "annotations": {
+   "readOnlyHint": true,
+   "destructiveHint": false,
+   "openWorldHint": false
+  }
+ },
+ {
+  "name": "layer",
+  "inputSchema": {
+   "properties": {
+    "state": {
+     "type": "string"
+    },
+    "layer_id": {
+     "type": "string"
+    },
+    "type": {
+     "type": "string",
+     "enum": [
+      "preset",
+      "toggle",
+      "switch"
+     ]
+    },
+    "role": {
+     "type": "string",
+     "enum": [
+      "back_hair",
+      "front_hair",
+      "headwear",
+      "face",
+      "face_detail",
+      "irides",
+      "eyebrow",
+      "eyewhite",
+      "eyelash",
+      "eye_close",
+      "eyewear",
+      "ears",
+      "earwear",
+      "nose",
+      "mouth",
+      "mouth_open",
+      "mouth_close",
+      "tooth_t",
+      "tooth_b",
+      "tongue",
+      "neck",
+      "neckwear",
+      "topwear",
+      "handwear",
+      "bottomwear",
+      "legwear",
+      "footwear",
+      "tail",
+      "wings",
+      "objects",
+      "unknown"
+     ]
+    },
+    "side": {
+     "type": "string",
+     "enum": [
+      "left",
+      "right",
+      "none"
+     ]
+    },
+    "parameter": {
+     "type": "string"
+    },
+    "switch_id": {
+     "type": "integer",
+     "minimum": 0
+    }
+   },
+   "required": [
+    "state",
+    "layer_id"
+   ],
+   "type": "object"
+  },
+  "description": "Classify an existing source layer using the same fields as the UI Layers table. Omitted fields retain their current values. This rebuilds the generated rig and commits a recoverable history edit.",
+  "annotations": {
+   "readOnlyHint": false,
+   "destructiveHint": false,
+   "openWorldHint": false
+  }
+ },
+ {
+  "name": "settings",
+  "inputSchema": {
+   "properties": {
+    "state": {
+     "type": "string"
+    },
+    "changes": {
+     "type": "object",
+     "properties": {
+      "atlasSize": {
+       "type": "integer",
+       "minimum": 0
+      },
+      "meshSpacing": {
+       "type": "integer",
+       "minimum": 0
+      },
+      "texturePadding": {
+       "type": "integer",
+       "minimum": 0
+      },
+      "alphaThreshold": {
+       "type": "integer",
+       "minimum": 0
+      },
+      "meshOuterMargin": {
+       "type": "number"
+      },
+      "meshEdgeWidth": {
+       "type": "number"
+      },
+      "meshMaxEdgeDistance": {
+       "type": "number"
+      },
+      "meshInteriorDensity": {
+       "type": "number"
+      },
+      "headStrength": {
+       "type": "number"
+      },
+      "bodyStrength": {
+       "type": "number"
+      },
+      "mouthThickness": {
+       "type": "number"
+      },
+      "exportPixelsPerUnit": {
+       "type": "number"
+      },
+      "meshOnly": {
+       "type": "boolean"
+      },
+      "generateDeformers": {
+       "type": "boolean"
+      },
+      "featureDisplacementEnabled": {
+       "type": "boolean"
+      },
+      "mouthOutlineEnabled": {
+       "type": "boolean"
+      },
+      "generatePhysics": {
+       "type": "boolean"
+      },
+      "physicsFrontHair": {
+       "type": "boolean"
+      },
+      "physicsBackHair": {
+       "type": "boolean"
+      },
+      "physicsEyeJelly": {
+       "type": "boolean"
+      },
+      "exportMotions": {
+       "type": "boolean"
+      },
+      "motionIdle": {
+       "type": "boolean"
+      },
+      "motionBlink": {
+       "type": "boolean"
+      },
+      "motionNod": {
+       "type": "boolean"
+      },
+      "motionShake": {
+       "type": "boolean"
+      },
+      "exportCmo3": {
+       "type": "boolean"
+      },
+      "exportMoc3": {
+       "type": "boolean"
+      },
+      "exportJson": {
+       "type": "boolean"
+      },
+      "exportHiddenParts": {
+       "type": "boolean"
+      },
+      "exportHiddenDrawables": {
+       "type": "boolean"
+      },
+      "exportGuideImageParts": {
+       "type": "boolean"
+      },
+      "exportIncludePhysics": {
+       "type": "boolean"
+      },
+      "exportIncludeUserData": {
+       "type": "boolean"
+      },
+      "exportIncludeDisplayInfo": {
+       "type": "boolean"
+      },
+      "mouthShape": {
+       "type": "string",
+       "enum": [
+        "flat",
+        "smile",
+        "w",
+        "custom"
+       ]
+      },
+      "meshEdgeMode": {
+       "type": "string",
+       "enum": [
+        "SINGLE",
+        "DOUBLE",
+        "TRIPLE"
+       ]
+      },
+      "runtimeTarget": {
+       "type": "string"
+      },
+      "textureUpscale": {
+       "type": "object",
+       "properties": {
+        "scale": {
+         "type": "integer",
+         "minimum": 1,
+         "maximum": 4
+        },
+        "python": {
+         "type": "string"
+        },
+        "nunifDirectory": {
+         "type": "string"
+        },
+        "modelDirectory": {
+         "type": "string"
+        },
+        "tileSize": {
+         "type": "integer",
+         "minimum": 64,
+         "maximum": 512
+        },
+        "noiseLevel": {
+         "type": "integer",
+         "minimum": -1,
+         "maximum": 3
+        },
+        "neuralAlpha": {
+         "type": "boolean"
+        }
+       },
+       "additionalProperties": false
+      },
+      "meshFillParameters": {
+       "type": "object",
+       "properties": {
+        "poisson": {
+         "type": "object",
+         "properties": {
+          "edgeRatio": {
+           "type": "number"
+          },
+          "gradation": {
+           "type": "number"
+          },
+          "jitter": {
+           "type": "number"
+          }
+         },
+         "additionalProperties": false
+        },
+        "quadtree": {
+         "type": "object",
+         "properties": {
+          "edgeRatio": {
+           "type": "number"
+          },
+          "gradation": {
+           "type": "number"
+          },
+          "angle": {
+           "type": "number"
+          }
+         },
+         "additionalProperties": false
+        },
+        "fractal": {
+         "type": "object",
+         "properties": {
+          "edgeRatio": {
+           "type": "number"
+          },
+          "gradation": {
+           "type": "number"
+          },
+          "angle": {
+           "type": "number"
+          }
+         },
+         "additionalProperties": false
+        },
+        "paving": {
+         "type": "object",
+         "properties": {
+          "edgeRatio": {
+           "type": "number"
+          },
+          "gradation": {
+           "type": "number"
+          },
+          "maxRows": {
+           "type": "integer",
+           "minimum": 0,
+           "maximum": 24
+          }
+         },
+         "additionalProperties": false
+        }
+       },
+       "additionalProperties": false
+      }
+     },
+     "additionalProperties": false
+    }
+   },
+   "required": [
+    "state",
+    "changes"
+   ],
+   "type": "object"
+  },
+  "description": "Update the project generation/export configuration used by the UI. Inspect scope=settings first. Rebuilds the model and commits history; textureUpscale fields are merged with the existing configuration.",
+  "annotations": {
+   "readOnlyHint": false,
+   "destructiveHint": false,
+   "openWorldHint": false
+  }
+ },
+ {
+  "name": "export",
+  "inputSchema": {
+   "properties": {
+    "state": {
+     "type": "string"
+    },
+    "output_directory": {
+     "type": "string"
+    }
+   },
+   "required": [
+    "state",
+    "output_directory"
+   ],
+   "type": "object"
+  },
+  "description": "Export the current source artwork and authored rig to the model file family at an absolute output directory. Uses inspect.settings export options and returns written files and warnings. Does not advance history.",
+  "annotations": {
+   "readOnlyHint": false,
+   "destructiveHint": false,
+   "openWorldHint": false
+  }
+ },
+ {
+  "name": "export_psd",
+  "inputSchema": {
+   "properties": {
+    "state": {
+     "type": "string"
+    },
+    "path": {
+     "type": "string"
+    },
+    "scale": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 4
+    },
+    "include_generated_layers": {
+     "type": "boolean"
+    }
+   },
+   "required": [
+    "state",
+    "path"
+   ],
+   "type": "object"
+  },
+  "description": "Export editable PSD layers using the same writer and upscale settings as the UI. Output path must be absolute; scale 2 or 4 requires configured texture upscale models. Does not advance history.",
+  "annotations": {
+   "readOnlyHint": false,
+   "destructiveHint": false,
+   "openWorldHint": false
+  }
+ },
+ {
+  "name": "layer_mesh",
+  "inputSchema": {
+   "properties": {
+    "state": {
+     "type": "string"
+    },
+    "layer_id": {
+     "type": "string"
+    },
+    "reset": {
+     "type": "boolean"
+    },
+    "changes": {
+     "type": "object",
+     "properties": {
+      "outerMargin": {
+       "type": "number"
+      },
+      "edgeMode": {
+       "type": "string",
+       "enum": [
+        "SINGLE",
+        "DOUBLE",
+        "TRIPLE"
+       ]
+      },
+      "edgeWidth": {
+       "type": "number"
+      },
+      "maxEdgeDistance": {
+       "type": "number"
+      },
+      "interiorDensity": {
+       "type": "number"
+      },
+      "fillAlgorithm": {
+       "type": "string",
+       "enum": [
+        "GRADED_POISSON",
+        "ADAPTIVE_QUADTREE",
+        "SIMPLE_TRIANGLES",
+        "TRIANGLE_FRACTAL",
+        "CONTOUR_PAVING"
+       ]
+      },
+      "suppressBoundaryDiagonals": {
+       "type": "boolean"
+      },
+      "fillParameters": {
+       "type": "object",
+       "properties": {
+        "poisson": {
+         "type": "object",
+         "properties": {
+          "edgeRatio": {
+           "type": "number"
+          },
+          "gradation": {
+           "type": "number"
+          },
+          "jitter": {
+           "type": "number"
+          }
+         },
+         "additionalProperties": false
+        },
+        "quadtree": {
+         "type": "object",
+         "properties": {
+          "edgeRatio": {
+           "type": "number"
+          },
+          "gradation": {
+           "type": "number"
+          },
+          "angle": {
+           "type": "number"
+          }
+         },
+         "additionalProperties": false
+        },
+        "fractal": {
+         "type": "object",
+         "properties": {
+          "edgeRatio": {
+           "type": "number"
+          },
+          "gradation": {
+           "type": "number"
+          },
+          "angle": {
+           "type": "number"
+          }
+         },
+         "additionalProperties": false
+        },
+        "paving": {
+         "type": "object",
+         "properties": {
+          "edgeRatio": {
+           "type": "number"
+          },
+          "gradation": {
+           "type": "number"
+          },
+          "maxRows": {
+           "type": "integer",
+           "minimum": 0,
+           "maximum": 24
+          }
+         },
+         "additionalProperties": false
+        }
+       },
+       "additionalProperties": false
+      }
+     },
+     "additionalProperties": false
+    }
+   },
+   "required": [
+    "state",
+    "layer_id"
+   ],
+   "type": "object"
+  },
+  "description": "Set or reset a source layer's adaptive mesh settings using the same ranges as the UI layer mesh dialog. Omitted fields retain their current values; inspect scope=settings and inspect layers for context.",
+  "annotations": {
+   "readOnlyHint": false,
+   "destructiveHint": false,
+   "openWorldHint": false
+  }
+ },
+ {
+  "name": "preview",
+  "inputSchema": {
+   "properties": {
+    "state": {
+     "type": "string"
+    },
+    "mode": {
+     "type": "string",
+     "enum": [
+      "set",
+      "reset"
+     ]
+    },
+    "values": {
+     "type": "object",
+     "additionalProperties": {
+      "type": "number"
+     }
+    },
+    "locks": {
+     "type": "object",
+     "additionalProperties": {
+      "type": "boolean"
+     }
+    }
+   },
+   "required": [
+    "state",
+    "mode"
+   ],
+   "type": "object"
+  },
+  "description": "Set current preview parameter values and locks, or reset them, through the UI session state. Values are checked against parameter ranges. This changes the preview session, not model keyforms or history.",
+  "annotations": {
+   "readOnlyHint": false,
+   "destructiveHint": false,
+   "openWorldHint": false
+  }
+ },
+ {
+  "name": "paint",
+  "inputSchema": {
+   "properties": {
+    "request": {
+     "type": "object",
+     "properties": {
+      "state": {
+       "type": "string"
+      },
+      "layer_id": {
+       "type": "string"
+      },
+      "color": {
+       "type": "array",
+       "items": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 255
+       },
+       "minItems": 4,
+       "maxItems": 4
+      },
+      "opacity": {
+       "type": "number"
+      },
+      "points": {
+       "type": "array",
+       "items": {
+        "type": "array",
+        "items": {
+         "type": "number"
+        },
+        "minItems": 2,
+        "maxItems": 2
+       },
+       "minItems": 1,
+       "maxItems": 512
+      },
+      "radius": {
+       "type": "number"
+      },
+      "hardness": {
+       "type": "number"
+      },
+      "point": {
+       "type": "array",
+       "items": {
+        "type": "number"
+       },
+       "minItems": 2,
+       "maxItems": 2
+      },
+      "tolerance": {
+       "type": "integer",
+       "minimum": 0,
+       "maximum": 255
+      },
+      "from": {
+       "type": "array",
+       "items": {
+        "type": "number"
+       },
+       "minItems": 2,
+       "maxItems": 2
+      },
+      "to": {
+       "type": "array",
+       "items": {
+        "type": "number"
+       },
+       "minItems": 2,
+       "maxItems": 2
+      },
+      "shape": {
+       "type": "string",
+       "enum": [
+        "line",
+        "rectangle",
+        "ellipse"
+       ]
+      },
+      "stroke_width": {
+       "type": "number"
+      },
+      "filled": {
+       "type": "boolean"
+      },
+      "mode": {
+       "type": "string",
+       "enum": [
+        "brush",
+        "eraser",
+        "bucket",
+        "shape",
+        "clear"
+       ]
+      }
+     },
+     "required": [
+      "mode",
+      "state",
+      "layer_id"
+     ],
+     "description": "Exactly one variant per call: brush (needs state, layer_id, points); eraser (needs state, layer_id, points); bucket (needs state, layer_id, point); shape (needs state, layer_id, from, to, shape); clear (needs state, layer_id).",
+     "additionalProperties": false
+    }
+   },
+   "required": [
+    "request"
+   ],
+   "type": "object"
+  },
+  "description": "Commit one source-image paint gesture in canvas pixels with the UI paint engine. Brush/eraser, bucket and shapes share the UI raster algorithms. Paint before authoring mesh forms or glue; source edits rebuild topology and are history-recoverable.",
+  "annotations": {
+   "readOnlyHint": false,
+   "destructiveHint": false,
+   "openWorldHint": false
+  }
+ },
+ {
+  "name": "deform",
+  "inputSchema": {
+   "properties": {
+    "state": {
+     "type": "string"
+    },
+    "changes": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "properties": {
+       "target": {
+        "type": "string"
+       },
+       "key": {
+        "type": "object",
+        "minProperties": 1,
+        "additionalProperties": {
+         "type": "number"
+        }
+       },
+       "operations": {
+        "type": "array",
+        "items": {
+         "type": "object",
+         "properties": {
+          "delta": {
+           "type": "array",
+           "items": {
+            "type": "number"
+           },
+           "minItems": 2,
+           "maxItems": 2
+          },
+          "selection": {
+           "type": "object",
+           "properties": {
+            "rect": {
+             "type": "array",
+             "items": {
+              "type": "number"
+             },
+             "minItems": 4,
+             "maxItems": 4
+            },
+            "center": {
+             "type": "array",
+             "items": {
+              "type": "number"
+             },
+             "minItems": 2,
+             "maxItems": 2
+            },
+            "line": {
+             "type": "array",
+             "items": {
+              "type": "number"
+             },
+             "minItems": 4,
+             "maxItems": 4
+            },
+            "radius": {
+             "type": "number"
+            },
+            "feather": {
+             "type": "number"
+            },
+            "hardness": {
+             "type": "number"
+            }
+           },
+           "additionalProperties": false
+          },
+          "factors": {
+           "type": "array",
+           "items": {
+            "type": "number"
+           },
+           "minItems": 2,
+           "maxItems": 2
+          },
+          "pivot": {
+           "type": "array",
+           "items": {
+            "type": "number"
+           },
+           "minItems": 2,
+           "maxItems": 2
+          },
+          "degrees": {
+           "type": "number"
+          },
+          "root": {
+           "type": "array",
+           "items": {
+            "type": "number"
+           },
+           "minItems": 2,
+           "maxItems": 2
+          },
+          "tip": {
+           "type": "array",
+           "items": {
+            "type": "number"
+           },
+           "minItems": 2,
+           "maxItems": 2
+          },
+          "root_pin": {
+           "type": "number"
+          },
+          "axis": {
+           "type": "string",
+           "enum": [
+            "x",
+            "y"
+           ]
+          },
+          "controls": {
+           "type": "array",
+           "items": {
+            "type": "number"
+           },
+           "minItems": 4,
+           "maxItems": 4
+          },
+          "from": {
+           "type": "array",
+           "items": {
+            "type": "array",
+            "items": {
+             "type": "number"
+            },
+            "minItems": 2,
+            "maxItems": 2
+           },
+           "minItems": 1,
+           "maxItems": 16
+          },
+          "to": {
+           "type": "array",
+           "items": {
+            "type": "array",
+            "items": {
+             "type": "number"
+            },
+            "minItems": 2,
+            "maxItems": 2
+           },
+           "minItems": 1,
+           "maxItems": 16
+          },
+          "type": {
+           "type": "string",
+           "enum": [
+            "translate",
+            "scale",
+            "rotate",
+            "arc",
+            "curve",
+            "landmarks"
+           ]
+          }
+         },
+         "required": [
+          "type"
+         ],
+         "description": "Exactly one variant per call: translate (needs delta); scale (needs factors); rotate (needs degrees); arc (needs degrees, root, tip); curve (needs controls); landmarks (needs from, to).",
+         "additionalProperties": false
+        },
+        "minItems": 1,
+        "maxItems": 16
+       },
+       "selection": {
+        "type": "object",
+        "properties": {
+         "rect": {
+          "type": "array",
+          "items": {
+           "type": "number"
+          },
+          "minItems": 4,
+          "maxItems": 4
+         },
+         "center": {
+          "type": "array",
+          "items": {
+           "type": "number"
+          },
+          "minItems": 2,
+          "maxItems": 2
+         },
+         "line": {
+          "type": "array",
+          "items": {
+           "type": "number"
+          },
+          "minItems": 4,
+          "maxItems": 4
+         },
+         "radius": {
+          "type": "number"
+         },
+         "feather": {
+          "type": "number"
+         },
+         "hardness": {
+          "type": "number"
+         }
+        },
+        "additionalProperties": false
+       }
+      },
+      "additionalProperties": false,
+      "required": [
+       "target",
+       "key",
+       "operations"
+      ]
+     },
+     "minItems": 1,
+     "maxItems": 128
+    }
+   },
+   "required": [
+    "state",
+    "changes"
+   ],
+   "type": "object"
+  },
+  "description": "Edit whole ArtMesh/Warp surfaces at exact keys, atomically across changes. All points participate including empty cage regions. Units: fixed input bounds, normalized x-right/y-down; rotations in degrees. arc bends cross-sections along root→tip; root_pin is a fixed length fraction. Optional brush hardness gives a broad plateau. Unspecified directly bound axes are an error. This edits local shapes; parent motion is inherited.",
+  "annotations": {
+   "readOnlyHint": false,
+   "destructiveHint": false,
+   "openWorldHint": false
+  }
+ },
+ {
+  "name": "form",
+  "inputSchema": {
+   "properties": {
+    "state": {
+     "type": "string"
+    },
+    "changes": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "properties": {
+       "target": {
+        "type": "string"
+       },
+       "key": {
+        "type": "object",
+        "minProperties": 1,
+        "additionalProperties": {
+         "type": "number"
+        }
+       },
+       "from": {
+        "type": "object",
+        "minProperties": 1,
+        "additionalProperties": {
+         "type": "number"
+        }
+       },
+       "destination": {
+        "type": "string"
+       },
+       "channels": {
+        "type": "array",
+        "items": {
+         "type": "string"
+        },
+        "minItems": 1,
+        "maxItems": 8
+       },
+       "geometry": {
+        "type": "object",
+        "properties": {
+         "originX": {
+          "type": "number"
+         },
+         "originY": {
+          "type": "number"
+         },
+         "angle": {
+          "type": "number"
+         },
+         "scale": {
+          "type": "number"
+         }
+        },
+        "additionalProperties": false
+       },
+       "parameter": {
+        "type": "string"
+       },
+       "value": {
+        "type": "number"
+       },
+       "channel": {
+        "type": "string"
+       },
+       "op": {
+        "type": "string",
+        "enum": [
+         "seed",
+         "copy",
+         "set",
+         "delete"
+        ]
+       }
+      },
+      "required": [
+       "op",
+       "target"
+      ],
+      "description": "Exactly one variant per call: seed (needs target, key); copy (needs target, from, key); set (needs target, key); delete (needs target, parameter).",
+      "additionalProperties": false
+     },
+     "minItems": 1,
+     "maxItems": 128
+    }
+   },
+   "required": [
+    "state",
+    "changes"
+   ],
+   "type": "object"
+  },
+  "description": "Author key collections atomically. seed captures interpolated geometry without changing other keys. copy transfers selected channels (omit for all) from an explicit source key. set writes scalar/color channels or a rotation form, never mesh point arrays. Keys name only the destination object's axes, not the viewing pose.",
+  "annotations": {
+   "readOnlyHint": false,
+   "destructiveHint": false,
+   "openWorldHint": false
+  }
+ },
+ {
+  "name": "rig",
+  "inputSchema": {
+   "properties": {
+    "state": {
+     "type": "string"
+    },
+    "name": {
+     "type": "string"
+    },
+    "targets": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     },
+     "minItems": 1,
+     "maxItems": 64
+    }
+   },
+   "required": [
+    "state",
+    "name",
+    "targets"
+   ],
+   "type": "object"
+  },
+  "description": "Create a fitted independent Warp for meshes sharing a parent. Existing keyforms and UVs migrate; the parent lattice constrains fit precision. Use deform directly when no independent motion layer is needed. Returned target is the new Warp.",
+  "annotations": {
+   "readOnlyHint": false,
+   "destructiveHint": false,
+   "openWorldHint": false
+  }
+ },
+ {
+  "name": "view",
+  "inputSchema": {
+   "properties": {
+    "request": {
+     "type": "object",
+     "properties": {
+      "rect": {
+       "type": "array",
+       "items": {
+        "type": "number"
+       },
+       "minItems": 4,
+       "maxItems": 4
+      },
+      "target_long_edge": {
+       "type": "integer",
+       "minimum": 128,
+       "maximum": 4096
+      },
+      "states": {
+       "type": "array",
+       "items": {
+        "type": "string"
+       },
+       "minItems": 1,
+       "maxItems": 2
+      },
+      "poses": {
+       "type": "array",
+       "items": {
+        "type": "object",
+        "additionalProperties": {
+         "type": "number"
+        }
+       },
+       "minItems": 1,
+       "maxItems": 4
+      },
+      "frames": {
+       "type": "array",
+       "items": {
+        "type": "object",
+        "properties": {
+         "time": {
+          "type": "number"
+         },
+         "parameters": {
+          "type": "object",
+          "additionalProperties": {
+           "type": "number"
+          }
+         }
+        },
+        "required": [
+         "time",
+         "parameters"
+        ]
+       },
+       "minItems": 2,
+       "maxItems": 32
+      },
+      "samples": {
+       "type": "array",
+       "items": {
+        "type": "number"
+       },
+       "minItems": 1,
+       "maxItems": 9
+      },
+      "fps": {
+       "type": "integer",
+       "minimum": 15,
+       "maximum": 120
+      },
+      "annotate_deformer_ids": {
+       "type": "array",
+       "maxItems": 16,
+       "items": {
+        "type": "string"
+       }
+      },
+      "annotate_path_ids": {
+       "type": "array",
+       "maxItems": 32,
+       "items": {
+        "type": "string"
+       }
+      },
+      "annotate_path_width": {
+       "type": "boolean",
+       "default": false
+      },
+      "annotate_path_hardness": {
+       "type": "boolean",
+       "default": false
+      },
+      "annotate_path_radius": {
+       "type": "boolean",
+       "default": false
+      },
+      "point_indices": {
+       "type": "boolean",
+       "default": false
+      },
+      "parameters": {
+       "type": "object",
+       "additionalProperties": {
+        "type": "number"
+       }
+      },
+      "include_layer_ids": {
+       "type": "array",
+       "items": {
+        "type": "string"
+       }
+      },
+      "annotate_layer_ids": {
+       "type": "array",
+       "items": {
+        "type": "string"
+       }
+      },
+      "viewport": {
+       "type": "object",
+       "properties": {
+        "mode": {
+         "type": "string",
+         "enum": [
+          "canvas_rect",
+          "focus_layers"
+         ]
+        },
+        "left": {
+         "type": "number"
+        },
+        "top": {
+         "type": "number"
+        },
+        "width": {
+         "type": "number"
+        },
+        "height": {
+         "type": "number"
+        },
+        "object_scale": {
+         "type": "number"
+        },
+        "aspect_ratio": {
+         "type": "number"
+        },
+        "layer_ids": {
+         "type": "array",
+         "items": {
+          "type": "string"
+         }
+        }
+       },
+       "required": [
+        "mode"
+       ]
+      },
+      "background": {
+       "type": "string",
+       "enum": [
+        "transparent",
+        "checkerboard"
+       ],
+       "default": "transparent"
+      },
+      "max_bytes": {
+       "type": "integer",
+       "minimum": 65536,
+       "maximum": 16777216,
+       "default": 4194304
+      },
+      "columns": {
+       "type": "integer",
+       "minimum": 1,
+       "maximum": 3
+      },
+      "layer_id": {
+       "type": "string"
+      },
+      "object_scale": {
+       "type": "number",
+       "minimum": 0.05,
+       "maximum": 4.0,
+       "default": 0.65
+      },
+      "aspect_ratio": {
+       "type": "number",
+       "minimum": 0.1,
+       "maximum": 10.0,
+       "default": 1.0
+      },
+      "alpha_threshold": {
+       "type": "integer",
+       "minimum": 1,
+       "maximum": 255,
+       "default": 128
+      },
+      "mode": {
+       "type": "string",
+       "enum": [
+        "compare",
+        "motion",
+        "poses",
+        "model",
+        "layer",
+        "context",
+        "coverage"
+       ]
+      }
+     },
+     "required": [
+      "mode"
+     ],
+     "description": "Exactly one variant per call: compare (needs rect, states, poses); motion (needs rect, frames, samples); poses (needs viewport, poses); model (needs viewport); layer (needs layer_id); context (needs layer_id); coverage (needs viewport, include_layer_ids).",
+     "additionalProperties": false
+    }
+   },
+   "required": [
+    "request"
+   ],
+   "type": "object"
+  },
+  "description": "Observe model poses with a fixed camera, source layers or coverage. poses returns one labeled sheet; shared parameters are overridden per tile. Reuse canvas rectangles across comparisons. Static sampling does not simulate physics. Inspect only relevant regions; images are not proof of unobserved poses.",
+  "annotations": {
+   "readOnlyHint": true,
+   "destructiveHint": false,
+   "openWorldHint": false
+  }
+ },
+ {
+  "name": "parameter",
+  "inputSchema": {
+   "properties": {
+    "request": {
+     "type": "object",
+     "properties": {
+      "parameter_id": {
+       "type": "string"
+      },
+      "state": {
+       "type": "string"
+      },
+      "name": {
+       "type": "string"
+      },
+      "min": {
+       "type": "number",
+       "default": -1
+      },
+      "max": {
+       "type": "number",
+       "default": 1
+      },
+      "default": {
+       "type": "number",
+       "default": 0
+      },
+      "kind": {
+       "type": "string",
+       "enum": [
+        "normal",
+        "blend_shape"
+       ],
+       "default": "normal"
+      },
+      "repeat": {
+       "type": "boolean",
+       "default": false
+      },
+      "mode": {
+       "type": "string",
+       "enum": [
+        "create",
+        "update",
+        "delete"
+       ]
+      }
+     },
+     "required": [
+      "mode",
+      "parameter_id",
+      "state"
+     ],
+     "description": "Exactly one variant per call: create (needs parameter_id, state, name); update (needs parameter_id, state); delete (needs parameter_id, state).",
+     "additionalProperties": false
+    }
+   },
+   "required": [
+    "request"
+   ],
+   "type": "object"
+  },
+  "description": "Create, update, or delete a parameter definition. kind=blend_shape creates a blend-shape parameter (default 0..1, neutral key at 0). A parameter alone produces no motion: form/deform author its object bindings and keys. Deleting collapses keyed axes at the prior default and removes blend bindings.",
+  "annotations": {
+   "readOnlyHint": false,
+   "destructiveHint": false,
+   "openWorldHint": false
+  }
+ },
+ {
+  "name": "asset",
+  "inputSchema": {
+   "properties": {
+    "request": {
+     "type": "object",
+     "properties": {
+      "path": {
+       "type": "string"
+      },
+      "width": {
+       "type": "integer",
+       "minimum": 1,
+       "maximum": 8192
+      },
+      "height": {
+       "type": "integer",
+       "minimum": 1,
+       "maximum": 8192
+      },
+      "layers": {
+       "type": "array",
+       "items": {
+        "type": "object",
+        "properties": {
+         "path": {
+          "type": "string"
+         },
+         "name": {
+          "type": "string"
+         },
+         "role": {
+          "type": "string"
+         },
+         "side": {
+          "type": "string"
+         },
+         "x": {
+          "type": "number"
+         },
+         "y": {
+          "type": "number"
+         }
+        },
+        "required": [
+         "path",
+         "name"
+        ],
+        "additionalProperties": false
+       },
+       "minItems": 1,
+       "maxItems": 32
+      },
+      "state": {
+       "type": "string"
+      },
+      "layer_id": {
+       "type": "string"
+      },
+      "polygon": {
+       "type": "array",
+       "items": {
+        "type": "array",
+        "items": {
+         "type": "number"
+        },
+        "minItems": 2,
+        "maxItems": 2
+       },
+       "minItems": 3,
+       "maxItems": 32
+      },
+      "names": {
+       "type": "array",
+       "items": {
+        "type": "string"
+       },
+       "minItems": 2,
+       "maxItems": 2
+      },
+      "piece_id": {
+       "type": "string"
+      },
+      "background_color": {
+       "type": "string"
+      },
+      "occlusion": {
+       "type": "string"
+      },
+      "target_anchors": {
+       "type": "object",
+       "additionalProperties": {
+        "type": "object",
+        "properties": {
+         "x": {
+          "type": "number"
+         },
+         "y": {
+          "type": "number"
+         }
+        },
+        "required": [
+         "x",
+         "y"
+        ]
+       }
+      },
+      "source_canvas_rect": {
+       "type": "object",
+       "properties": {
+        "left": {
+         "type": "number"
+        },
+        "top": {
+         "type": "number"
+        },
+        "width": {
+         "type": "number"
+        },
+        "height": {
+         "type": "number"
+        }
+       },
+       "required": [
+        "left",
+        "top",
+        "width",
+        "height"
+       ]
+      },
+      "target_long_edge": {
+       "type": "integer",
+       "minimum": 64,
+       "maximum": 4096
+      },
+      "png_path": {
+       "type": "string"
+      },
+      "reference_id": {
+       "type": "string"
+      },
+      "processing": {
+       "type": "object",
+       "properties": {
+        "edge_width": {
+         "type": "integer",
+         "minimum": 0,
+         "maximum": 8,
+         "default": 3
+        },
+        "foreground_points": {
+         "type": "array",
+         "items": {
+          "type": "object",
+          "properties": {
+           "x": {
+            "type": "number"
+           },
+           "y": {
+            "type": "number"
+           }
+          },
+          "required": [
+           "x",
+           "y"
+          ]
+         }
+        },
+        "background_points": {
+         "type": "array",
+         "items": {
+          "type": "object",
+          "properties": {
+           "x": {
+            "type": "number"
+           },
+           "y": {
+            "type": "number"
+           }
+          },
+          "required": [
+           "x",
+           "y"
+          ]
+         }
+        }
+       }
+      },
+      "solid_background": {
+       "type": "string",
+       "pattern": "^#[0-9a-fA-F]{6}$"
+      },
+      "background_tolerance": {
+       "type": "integer",
+       "minimum": 0,
+       "maximum": 64,
+       "default": 16
+      },
+      "require_transparency": {
+       "type": "boolean"
+      },
+      "spatial_reference_id": {
+       "type": "string"
+      },
+      "source_pixel_rect": {
+       "type": "object",
+       "properties": {
+        "left": {
+         "type": "integer"
+        },
+        "top": {
+         "type": "integer"
+        },
+        "width": {
+         "type": "integer"
+        },
+        "height": {
+         "type": "integer"
+        }
+       },
+       "required": [
+        "left",
+        "top",
+        "width",
+        "height"
+       ]
+      },
+      "asset_id": {
+       "type": "string"
+      },
+      "generated_pixel_rect": {
+       "type": "object",
+       "properties": {
+        "left": {
+         "type": "number"
+        },
+        "top": {
+         "type": "number"
+        },
+        "width": {
+         "type": "number"
+        },
+        "height": {
+         "type": "number"
+        }
+       },
+       "required": [
+        "left",
+        "top",
+        "width",
+        "height"
+       ]
+      },
+      "generated_anchors": {
+       "type": "object",
+       "additionalProperties": {
+        "type": "object",
+        "properties": {
+         "x": {
+          "type": "number"
+         },
+         "y": {
+          "type": "number"
+         }
+        },
+        "required": [
+         "x",
+         "y"
+        ]
+       }
+      },
+      "mirror_x": {
+       "type": "boolean",
+       "default": false
+      },
+      "mirror_y": {
+       "type": "boolean",
+       "default": false
+      },
+      "allow_stretch": {
+       "type": "boolean",
+       "default": false
+      },
+      "transform": {
+       "type": "object",
+       "properties": {
+        "x": {
+         "type": "number"
+        },
+        "y": {
+         "type": "number"
+        },
+        "scale_x": {
+         "type": "number"
+        },
+        "scale_y": {
+         "type": "number"
+        },
+        "rotation_degrees": {
+         "type": "number"
+        },
+        "mirror_x": {
+         "type": "boolean"
+        },
+        "mirror_y": {
+         "type": "boolean"
+        }
+       },
+       "required": [
+        "x",
+        "y",
+        "scale_x"
+       ]
+      },
+      "replace_layer_ids": {
+       "type": "array",
+       "items": {
+        "type": "string"
+       }
+      },
+      "placements": {
+       "type": "array",
+       "minItems": 1,
+       "items": {
+        "type": "object",
+        "properties": {
+         "registration_id": {
+          "type": "string"
+         },
+         "insertion": {
+          "type": "string"
+         },
+         "reference_layer_id": {
+          "type": "string"
+         }
+        },
+        "required": [
+         "registration_id"
+        ]
+       }
+      },
+      "registration_id": {
+       "type": "string"
+      },
+      "name": {
+       "type": "string"
+      },
+      "group_path": {
+       "type": "string"
+      },
+      "semantic_tag": {
+       "type": "string",
+       "default": "unknown"
+      },
+      "side": {
+       "type": "string",
+       "enum": [
+        "left",
+        "right",
+        "none"
+       ],
+       "default": "none"
+      },
+      "insertion": {
+       "type": "object",
+       "properties": {
+        "mode": {
+         "type": "string",
+         "enum": [
+          "top",
+          "bottom",
+          "above",
+          "below"
+         ]
+        },
+        "reference_layer_id": {
+         "type": "string"
+        }
+       },
+       "required": [
+        "mode"
+       ]
+      },
+      "visible": {
+       "type": "boolean",
+       "default": true
+      },
+      "opacity": {
+       "type": "number",
+       "minimum": 0,
+       "maximum": 1,
+       "default": 1
+      },
+      "trim_transparent": {
+       "type": "boolean",
+       "default": true
+      },
+      "parent_deformer_id": {
+       "type": "string"
+      },
+      "mode": {
+       "type": "string",
+       "enum": [
+        "psd",
+        "create",
+        "split",
+        "reference",
+        "import",
+        "register",
+        "preview",
+        "add",
+        "place",
+        "finalize",
+        "inspect",
+        "reprocess",
+        "remove"
+       ]
+      }
+     },
+     "required": [
+      "mode"
+     ],
+     "description": "Exactly one variant per call: psd (needs path); create (needs width, height, layers); split (needs state, layer_id, polygon, names); reference (needs layer_id, piece_id, background_color, target_anchors); import (needs png_path); register (needs asset_id); preview (needs placements, replace_layer_ids); add (needs asset_id, state, name); place (needs layer_id, state, registration_id); finalize (needs layer_id, state); inspect (needs asset_id); reprocess (needs asset_id); remove (needs layer_id, state).",
+     "additionalProperties": false
+    }
+   },
+   "required": [
+    "request"
+   ],
+   "type": "object"
+  },
+  "description": "Import an existing PSD or use local PNG paths from your host image generator. create builds an empty workspace from placed source layers, bottom-to-top. split partitions a source layer into polygon-inside/remainder (canvas pixels), before motion authoring; hidden artwork is not generated. For additions prepare a reference, import/register PNG, preview, add. Reference/view handles preserve placement. Generated art is not proof of model motion.",
+  "annotations": {
+   "readOnlyHint": false,
+   "destructiveHint": false,
+   "openWorldHint": false
+  }
+ },
+ {
+  "name": "physics",
+  "inputSchema": {
+   "properties": {
+    "request": {
+     "type": "object",
+     "properties": {
+      "id": {
+       "type": "string"
+      },
+      "name": {
+       "type": "string"
+      },
+      "state": {
+       "type": "string"
+      },
+      "input_parameter": {
+       "type": "string"
+      },
+      "output_parameter": {
+       "type": "string"
+      },
+      "length": {
+       "type": "number"
+      },
+      "mobility": {
+       "type": "number"
+      },
+      "delay": {
+       "type": "number"
+      },
+      "acceleration": {
+       "type": "number"
+      },
+      "output_scale": {
+       "type": "number"
+      },
+      "mode": {
+       "type": "string",
+       "enum": [
+        "put",
+        "delete"
+       ]
+      }
+     },
+     "required": [
+      "mode",
+      "id",
+      "state"
+     ],
+     "description": "Exactly one variant per call: put (needs id, name, state, input_parameter, output_parameter); delete (needs id, state).",
+     "additionalProperties": false
+    }
+   },
+   "required": [
+    "request"
+   ],
+   "type": "object"
+  },
+  "description": "Create, replace, or delete an independent input→output parameter pendulum. Author the output parameter's endpoint forms first. Static view poses do not establish settling or natural motion.",
+  "annotations": {
+   "readOnlyHint": false,
+   "destructiveHint": false,
+   "openWorldHint": false
+  }
+ },
+ {
+  "name": "appearance",
+  "inputSchema": {
+   "properties": {
+    "state": {
+     "type": "string"
+    },
+    "edits": {
+     "type": "array",
+     "minItems": 1,
+     "maxItems": 128,
+     "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+       "action": {
+        "type": "string",
+        "enum": [
+         "rename",
+         "visibility",
+         "move",
+         "bind"
+        ]
+       },
+       "kind": {
+        "type": "string",
+        "enum": [
+         "mesh",
+         "warp",
+         "rotation",
+         "part"
+        ]
+       },
+       "before_kind": {
+        "type": "string",
+        "enum": [
+         "mesh",
+         "part"
+        ]
+       },
+       "space": {
+        "type": "string",
+        "enum": [
+         "local"
+        ]
+       },
+       "id": {
+        "type": "string"
+       },
+       "name": {
+        "type": "string"
+       },
+       "parent_id": {
+        "type": [
+         "string",
+         "null"
+        ]
+       },
+       "before_id": {
+        "type": [
+         "string",
+         "null"
+        ]
+       },
+       "visible": {
+        "type": "boolean"
+       }
+      },
+      "required": [
+       "action",
+       "kind",
+       "id"
+      ],
+      "description": "rename: name. visibility: visible (mesh/part). move: parent_id (null=root), optional before_id and before_kind for organizational siblings. bind: mesh to deformer parent_id. Deformer move and mesh bind require space=local, retaining local keys but changing inherited appearance. Organizational moves leave deformation unchanged."
+     }
+    }
+   },
+   "required": [
+    "state",
+    "edits"
+   ],
+   "type": "object"
+  },
+  "description": "Rename, show/hide or reorganize objects in one ordered edit. For an animated switch use form opacity keys instead of static visibility. Local reparenting changes inherited motion.",
+  "annotations": {
+   "readOnlyHint": false,
+   "destructiveHint": false,
+   "openWorldHint": false
+  }
+ },
+ {
+  "name": "structure",
+  "inputSchema": {
+   "properties": {
+    "state": {
+     "type": "string"
+    },
+    "edits": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "properties": {
+       "action": {
+        "type": "string",
+        "enum": [
+         "static",
+         "part",
+         "delete",
+         "create",
+         "rename",
+         "move",
+         "link",
+         "open",
+         "color"
+        ]
+       },
+       "kind": {
+        "type": "string",
+        "enum": [
+         "mesh",
+         "warp",
+         "rotation",
+         "part",
+         "parameter",
+         "param_group"
+        ]
+       },
+       "id": {
+        "type": "string"
+       },
+       "name": {
+        "type": "string"
+       },
+       "parent_id": {},
+       "before_id": {},
+       "before_kind": {
+        "type": "string",
+        "enum": [
+         "mesh",
+         "part",
+         "parameter",
+         "param_group"
+        ]
+       },
+       "part_id": {},
+       "space": {
+        "type": "string",
+        "enum": [
+         "local"
+        ]
+       },
+       "opacity": {
+        "type": "number"
+       },
+       "draw_order": {
+        "type": "number"
+       },
+       "multiply_color": {
+        "type": "array",
+        "items": {
+         "type": "number"
+        },
+        "minItems": 3,
+        "maxItems": 3
+       },
+       "screen_color": {
+        "type": "array",
+        "items": {
+         "type": "number"
+        },
+        "minItems": 3,
+        "maxItems": 3
+       },
+       "blend_mode": {
+        "type": "string"
+       },
+       "masked_by": {
+        "type": "array",
+        "items": {
+         "type": "string"
+        },
+        "minItems": 0,
+        "maxItems": 64
+       },
+       "invert_mask": {
+        "type": "boolean"
+       },
+       "culling": {
+        "type": "boolean"
+       },
+       "selectable": {
+        "type": "boolean"
+       },
+       "quad": {
+        "type": "boolean"
+       },
+       "partner_id": {
+        "type": "string"
+       },
+       "linked": {
+        "type": "boolean"
+       },
+       "open": {
+        "type": "boolean"
+       },
+       "label_type": {
+        "type": "string"
+       },
+       "color": {
+        "type": "integer",
+        "minimum": -2147483648
+       }
+      },
+      "additionalProperties": false,
+      "required": [
+       "action",
+       "kind",
+       "id"
+      ]
+     },
+     "minItems": 1,
+     "maxItems": 128
+    }
+   },
+   "required": [
+    "state",
+    "edits"
+   ],
+   "type": "object"
+  },
+  "description": "Edit static object properties, delete deformers, assign a deformer Part, or organize parameter folders and 2D links. Edits are ordered and use the same persistent structure journal as the UI. Parameter definitions use parameter instead.",
+  "annotations": {
+   "readOnlyHint": false,
+   "destructiveHint": false,
+   "openWorldHint": false
+  }
+ },
+ {
+  "name": "canvas",
+  "inputSchema": {
+   "properties": {
+    "request": {
+     "type": "object",
+     "properties": {
+      "state": {
+       "type": "string"
+      },
+      "id": {
+       "type": "string"
+      },
+      "name": {
+       "type": "string"
+      },
+      "meshes": {
+       "type": "array",
+       "items": {
+        "type": "string"
+       },
+       "minItems": 0,
+       "maxItems": 64
+      },
+      "add_to": {
+       "type": "string",
+       "enum": [
+        "parent_of_selected",
+        "parent_of_deformer",
+        "child_of_deformer",
+        "specify_parent"
+       ]
+      },
+      "deformer_id": {
+       "type": "string"
+      },
+      "parent_id": {
+       "type": "string"
+      },
+      "part_id": {
+       "type": "string"
+      },
+      "bounds": {
+       "type": "object",
+       "properties": {
+        "x": {
+         "type": "number"
+        },
+        "y": {
+         "type": "number"
+        },
+        "w": {
+         "type": "number"
+        },
+        "h": {
+         "type": "number"
+        }
+       },
+       "additionalProperties": false,
+       "required": [
+        "x",
+        "y",
+        "w",
+        "h"
+       ]
+      },
+      "size_strategy": {
+       "type": "string",
+       "enum": [
+        "selection_bounds",
+        "keyform_envelope",
+        "center_align"
+       ]
+      },
+      "rows": {
+       "type": "integer",
+       "minimum": 1,
+       "maximum": 32
+      },
+      "columns": {
+       "type": "integer",
+       "minimum": 1,
+       "maximum": 32
+      },
+      "origin": {
+       "type": "array",
+       "items": {
+        "type": "number"
+       },
+       "minItems": 2,
+       "maxItems": 2
+      },
+      "angle": {
+       "type": "number"
+      },
+      "handle_length": {
+       "type": "number"
+      },
+      "preservePose": {
+       "type": "boolean"
+      },
+      "mesh_a": {
+       "type": "string"
+      },
+      "mesh_b": {
+       "type": "string"
+      },
+      "pose": {
+       "type": "object",
+       "additionalProperties": {
+        "type": "number"
+       }
+      },
+      "distance": {
+       "type": "number"
+      },
+      "action": {
+       "type": "string",
+       "enum": [
+        "merge",
+        "duplicate",
+        "connect",
+        "delete",
+        "subdivide",
+        "split",
+        "knife"
+       ]
+      },
+      "vertices": {
+       "type": "array",
+       "items": {
+        "type": "integer",
+        "minimum": 0
+       },
+       "minItems": 0,
+       "maxItems": 65536
+      },
+      "anchors": {
+       "type": "array",
+       "items": {
+        "type": "object",
+        "properties": {
+         "vertex": {
+          "type": "integer",
+          "minimum": 0
+         },
+         "x": {
+          "type": "number"
+         },
+         "y": {
+          "type": "number"
+         }
+        },
+        "additionalProperties": false
+       },
+       "minItems": 0,
+       "maxItems": 4096
+      },
+      "edges": {
+       "type": "array",
+       "items": {
+        "type": "array",
+        "items": {
+         "type": "integer",
+         "minimum": 0
+        },
+        "minItems": 2,
+        "maxItems": 2
+       },
+       "minItems": 0,
+       "maxItems": 65536
+      },
+      "mode": {
+       "type": "string",
+       "enum": [
+        "warp",
+        "rotation",
+        "glue",
+        "topology"
+       ]
+      }
+     },
+     "required": [
+      "mode",
+      "state"
+     ],
+     "description": "Exactly one variant per call: warp (needs state, name, meshes); rotation (needs state, name); glue (needs state, mesh_a, mesh_b); topology (needs state, id, action, vertices).",
+     "additionalProperties": false
+    }
+   },
+   "required": [
+    "request"
+   ],
+   "type": "object"
+  },
+  "description": "Use the canvas editor's persisted algorithms to create a Warp or Rotation, pair Glue vertices at a pose, or edit mesh topology. Topology indices are from the current mesh and require fresh state. Creation accepts an optional stable ID; otherwise one is generated.",
+  "annotations": {
+   "readOnlyHint": false,
+   "destructiveHint": false,
+   "openWorldHint": false
+  }
+ },
+ {
+  "name": "path",
+  "inputSchema": {
+   "properties": {
+    "request": {
+     "type": "object",
+     "properties": {
+      "target": {
+       "type": "string"
+      },
+      "path_id": {
+       "type": "string"
+      },
+      "moved_points": {
+       "type": "array",
+       "items": {},
+       "minItems": 2,
+       "maxItems": 128
+      },
+      "width": {
+       "type": "number"
+      },
+      "hardness": {
+       "type": "number"
+      },
+      "show_width": {
+       "type": "boolean"
+      },
+      "show_hardness": {
+       "type": "boolean"
+      },
+      "render": {
+       "type": "boolean"
+      },
+      "state": {
+       "type": "string"
+      },
+      "id": {
+       "type": "string"
+      },
+      "points": {
+       "type": "array",
+       "items": {},
+       "minItems": 2,
+       "maxItems": 128
+      },
+      "closed": {
+       "type": "boolean"
+      },
+      "level": {
+       "type": "integer",
+       "minimum": 2,
+       "maximum": 3
+      },
+      "key": {
+       "type": "object",
+       "minProperties": 1,
+       "additionalProperties": {
+        "type": "number"
+       }
+      },
+      "mode": {
+       "type": "string",
+       "enum": [
+        "get",
+        "list",
+        "preview",
+        "put",
+        "delete",
+        "deform"
+       ]
+      }
+     },
+     "required": [
+      "mode"
+     ],
+     "description": "Exactly one variant per call: get; list; preview (needs target, path_id, moved_points); put (needs state, target, points); delete (needs state, path_id); deform (needs state, target, path_id, key, moved_points).",
+     "additionalProperties": false
+    }
+   },
+   "required": [
+    "request"
+   ],
+   "type": "object"
+  },
+  "description": "Inspect, create, delete, dry-run preview, or deform an ArtMesh with Deform Paths. Points use mesh local coordinates [x, y] with auto-binding to mesh triangles. deform bakes moving least squares (MLS) displacement as a keyform at key.",
+  "annotations": {
+   "readOnlyHint": false,
+   "destructiveHint": false,
+   "openWorldHint": false
+  }
+ },
+ {
+  "name": "revision",
+  "inputSchema": {
+   "properties": {
+    "request": {
+     "type": "object",
+     "properties": {
+      "summary": {
+       "type": "string"
+      },
+      "node_id": {
+       "type": "string"
+      },
+      "mode": {
+       "type": "string",
+       "enum": [
+        "save",
+        "checkpoint",
+        "list",
+        "restore"
+       ]
+      }
+     },
+     "required": [
+      "mode"
+     ],
+     "description": "Exactly one variant per call: save; checkpoint (needs summary); list; restore (needs node_id).",
+     "additionalProperties": false
+    }
+   },
+   "required": [
+    "request"
+   ],
+   "type": "object"
+  },
+  "description": "Save, checkpoint, inspect history or restore a chosen snapshot. Every mutation returns a new state; chain it. Restore is a write, not preview. Keep your own task plan; checkpoints preserve useful progress.",
+  "annotations": {
+   "readOnlyHint": false,
+   "destructiveHint": false,
+   "openWorldHint": false
+  }
+ }
+]

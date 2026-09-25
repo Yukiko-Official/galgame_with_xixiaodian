@@ -1,0 +1,32 @@
+{
+  "version": 1,
+  "model": "2",
+  "generator": "PSD2Live 1.2.2",
+  "runtimeTarget": "Cubism50",
+  "mocVersion": 5,
+  "cmo3TargetVersionNo": 5000000,
+  "cmo3FileFormatVersion": "500000005",
+  "canvas": {"width":1280,"height":1920},
+  "config": {"atlasSize":4096,"meshSpacing":40,"headTurnStrength":1.0,"bodyStrength":1.0,"meshOnly":false,"generateDeformers":true,"exportMotions":true},
+  "faceRig": {"algorithm":"perspective-parallelogram-nine-pose-v2","angleX":[-45,0,45],"angleY":[-30,0,30],"initialAngleZ":0.0,"centerX":659.13,"centerY":592.74316,"radiusX":556.81,"radiusY":509.26318},
+  "deformerHierarchy": {"head":"DeformHeadContainer","face":"DeformFaceNinePose","frontHair":["DeformHairFrontFollow","DeformHairFrontPhysics"],"backHair":["DeformHairBackFollow","DeformHairBackPhysics"]},
+  "physics": {"enabled":true,"frontHair":false,"backHair":false,"eyeJelly":false,"preset":"hair-and-eye-pendulum"},
+  "summary": {"layers":14,"drawables":14,"deformers":13,"parameters":18,"atlasPages":1},
+  "layers": [
+    {"source":"下装","type":"preset","tag":"bottomwear","side":"NONE","parameter":"","switchId":0,"drawable":"ArtMeshBottomwear"},
+  {"source":"右手","type":"preset","tag":"handwear","side":"RIGHT","parameter":"","switchId":0,"drawable":"ArtMeshHandwearR"},
+  {"source":"左手","type":"preset","tag":"handwear","side":"LEFT","parameter":"","switchId":0,"drawable":"ArtMeshHandwearL"},
+  {"source":"上衣","type":"preset","tag":"topwear","side":"NONE","parameter":"","switchId":0,"drawable":"ArtMeshTopwear"},
+  {"source":"面部","type":"preset","tag":"face","side":"NONE","parameter":"","switchId":0,"drawable":"ArtMeshFace"},
+  {"source":"嘴巴 / 上唇描边","type":"preset","tag":"mouth","side":"NONE","parameter":"","switchId":0,"drawable":"ArtMeshMouth_lip_0"},
+  {"source":"嘴巴 / 下唇描边","type":"preset","tag":"mouth","side":"NONE","parameter":"","switchId":0,"drawable":"ArtMeshMouth_lip_1"},
+  {"source":"嘴巴","type":"preset","tag":"mouth","side":"NONE","parameter":"","switchId":0,"drawable":"ArtMeshMouth"},
+  {"source":"眉毛","type":"preset","tag":"eyebrow","side":"NONE","parameter":"","switchId":0,"drawable":"ArtMeshEyebrow"},
+  {"source":"眼白","type":"preset","tag":"eyewhite","side":"NONE","parameter":"","switchId":0,"drawable":"ArtMeshEyewhite"},
+  {"source":"虹膜","type":"preset","tag":"irides","side":"NONE","parameter":"","switchId":0,"drawable":"ArtMeshIrides"},
+  {"source":"眉毛","type":"preset","tag":"eyebrow","side":"NONE","parameter":"","switchId":0,"drawable":"ArtMeshEyebrow"},
+  {"source":"眼白","type":"preset","tag":"eyewhite","side":"NONE","parameter":"","switchId":0,"drawable":"ArtMeshEyewhite"},
+  {"source":"虹膜","type":"preset","tag":"irides","side":"NONE","parameter":"","switchId":0,"drawable":"ArtMeshIrides"}
+  ],
+  "warnings": ["检测到同名图层：手, 眉毛, 眼白, 虹膜；已通过稳定图层 ID 区分。"]
+}

@@ -1,0 +1,15 @@
+{
+  "request": {
+    "mode": "put",
+    "id": "phys_body_follow_z",
+    "name": "身体跟随Z",
+    "state": "history-f9315d35-64b0-41d0-a21f-abf70d7c962f",
+    "input_parameter": "ParamAngleZ",
+    "output_parameter": "ParamBodyAngleZ",
+    "length": 0.3,
+    "mobility": 0.65,
+    "delay": 0.6,
+    "acceleration": 0.03,
+    "output_scale": 0.25
+  }
+}

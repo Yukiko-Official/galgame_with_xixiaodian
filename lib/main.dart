@@ -10,6 +10,7 @@ import 'pages/plan_page.dart';
 import 'pages/timetable_page.dart';
 import 'services/assistant_service.dart';
 import 'services/auth_service.dart';
+import 'services/live2d_actor.dart';
 import 'services/notification_service.dart';
 import 'services/plan_service.dart';
 import 'services/settings_service.dart';
@@ -351,6 +352,13 @@ class _SettingsPageState extends State<SettingsPage> {
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () => _pickTheme(context),
               ),
+              ListTile(
+                leading: const Icon(Icons.pets_outlined),
+                title: const Text('桌宠形象'),
+                subtitle: Text(SettingsService.instance.live2dVariant.label),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => _pickLive2DVariant(context),
+              ),
               const Divider(),
               _sectionTitle('关于'),
               ListTile(
@@ -447,6 +455,33 @@ class _SettingsPageState extends State<SettingsPage> {
     );
     if (picked != null) {
       await SettingsService.instance.setThemeMode(picked);
+    }
+  }
+
+  /// 选桌宠用哪套模型。
+  Future<void> _pickLive2DVariant(BuildContext context) async {
+    final Live2DVariant? picked = await showModalBottomSheet<Live2DVariant>(
+      context: context,
+      builder: (BuildContext sheetContext) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            const SizedBox(height: 8),
+            for (final Live2DVariant variant in Live2DVariant.values)
+              ListTile(
+                title: Text(variant.label),
+                trailing: SettingsService.instance.live2dVariant == variant
+                    ? const Icon(Icons.check)
+                    : null,
+                onTap: () => Navigator.of(sheetContext).pop(variant),
+              ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+    if (picked != null) {
+      await SettingsService.instance.setLive2DVariant(picked);
     }
   }
 

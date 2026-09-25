@@ -1,0 +1,8 @@
+{
+  "request": {
+    "mode": "model",
+    "viewport": {"mode": "canvas_rect", "left": 0, "top": 0, "width": 1280, "height": 1920},
+    "target_long_edge": 1024,
+    "background": "checkerboard"
+  }
+}

@@ -1,14 +1,71 @@
 import 'package:flutter/foundation.dart';
 
+/// 可选的桌宠模型。
+///
+/// 每个模型一套 assets：文件放 `assets/live2d/<id>/`，目录要在 pubspec.yaml 里声明。
+/// 加新模型时，把文件放进去、往这里补一项、再到设置页的选项里去（选项直接遍历
+/// [values]，不用另外改）。
+enum Live2DVariant {
+  nailong(
+    'nailong',
+    '奶蛙',
+    'assets/live2d/nailong/',
+    'nailong.model3.json',
+    hasMotions: false,
+  ),
+  xxd(
+    'xxd',
+    '西小电',
+    'assets/live2d/xxd/',
+    'xxd.model3.json',
+    hasMotions: true,
+  );
+
+  const Live2DVariant(
+    this.id,
+    this.label,
+    this.modelDir,
+    this.modelFileName, {
+    required this.hasMotions,
+  });
+
+  /// 存本地用的标识，改了相当于换一个设置项。
+  final String id;
+
+  /// 给人看的名字，设置页里显示它。
+  final String label;
+
+  /// 模型在 assets 里的目录（带尾斜杠）和入口文件名。
+  final String modelDir;
+  final String modelFileName;
+
+  /// 这套模型带动作文件没。没有的话提示词里就不提动作了——写了也播不出来，
+  /// 白占 token。
+  final bool hasMotions;
+
+  /// 按 id 找回模型，认不出就用默认那套。
+  static Live2DVariant byId(String? id) => values.firstWhere(
+    (Live2DVariant item) => item.id == id,
+    orElse: () => defaultVariant,
+  );
+
+  /// 没选过、或者存的值认不出来时用哪套。
+  static const Live2DVariant defaultVariant = xxd;
+}
+
 /// 桌宠能表现的情绪。
 ///
-/// 下标对应模型 `model3.json` 里 Expressions 的顺序。现在这套（nailong，奶蛙）只挂了
-/// 一条表情——作者给的「去水印」，它把 `ParamAngleX7`（在模型里就叫「水印开关」）加到
-/// 2.0，水印就藏起来了。所以下面全部指向 0：桌宠不会变脸，同时也保证水印一直关着。
+/// 下标对应模型 `model3.json` 里 Expressions 的顺序，而两个模型能表达的**不一样**：
 ///
-/// 想让它有表情：做几个情绪向的 .exp3.json 放进 `assets/live2d/nailong/`，挂到
-/// model3.json 的 Expressions 后面，再把下面的下标填回去。**下标 0 必须留给去水印**，
-/// 挪走它水印就会露出来（直接 `setParameter` 是没用的，会被每帧的 LoadParameters 冲掉）。
+/// - 奶蛙：只挂了一条作者给的「去水印」表情，它把 `ParamAngleX7`（模型里就叫
+///   「水印开关」）加到 2.0 把水印藏起来，所以下面全都指向 0——不会变脸，但水印关着。
+/// - 西小电：压根没声明 Expressions。表情调用会被原生侧忽略掉（下标越界直接 return，
+///   不报错），它靠自带的 Idle / Nod / Shake 动作来表现。
+///
+/// 想给某个模型加表情：做几个情绪向的 .exp3.json 放进对应的 `assets/live2d/<模型>/`，
+/// 挂到它 model3.json 的 Expressions 后面，再把下面的下标填回去。**奶蛙的下标 0 必须
+/// 留给去水印**，挪走它水印就会露出来（直接 `setParameter` 是没用的，会被每帧的
+/// LoadParameters 冲掉）。
 enum Live2DEmotion {
   neutral('neutral', 0, '平静'),
   happy('happy', 0, '开心'),
@@ -36,12 +93,17 @@ enum Live2DEmotion {
   );
 }
 
-/// 模型能播的动作组，别的名字一律不认。
+/// 提示词里写的动作名 → 模型 `model3.json` 里 Motion 组的名字。
 ///
-/// 现在这套（nailong，奶蛙）没带动作文件（没有 motions/ 目录），所以这里是空的——
-/// 标记里就算写了动作也播不出来，只会换表情。以后换成带动作的模型（比如 Haru 的
-/// Idle / TapBody）再把映射填回来。
-const Map<String, String> live2dMotionGroups = <String, String>{};
+/// 认不出的名字一律不播。模型没这组动作时原生侧本来就会忽略掉（`GetMotionCount`
+/// 是 0 就直接 return），所以这张表可以给所有模型共用：西小电带 Idle / Blink /
+/// Nod / Shake，奶蛙一个动作文件都没有，标记里写了动作也只会换个表情。
+/// Idle 不列进来——那是模型空闲时自己循环播的，不用指挥。
+const Map<String, String> live2dMotionGroups = <String, String>{
+  'nod': 'Nod',
+  'shake': 'Shake',
+  'blink': 'Blink',
+};
 
 /// 一次要执行的指令。
 class Live2DAct {
@@ -62,10 +124,6 @@ class Live2DActor extends ChangeNotifier {
 
   /// 全局单例，桌宠状态在 App 内共享一份。
   static final Live2DActor instance = Live2DActor._();
-
-  /// 模型放在 assets 里的位置。换模型时这里和 pubspec.yaml 的 assets 要一起改。
-  static const String modelDir = 'assets/live2d/nailong/';
-  static const String modelFileName = 'nailong.model3.json';
 
   /// 回复里的控制标记，形如 `[act:happy]` 或者 `[act:angry,tap]`。
   static final RegExp _markPattern = RegExp(

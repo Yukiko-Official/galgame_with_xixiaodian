@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_live2d/flutter_live2d.dart';
 
 import '../services/live2d_actor.dart';
+import '../services/settings_service.dart';
 
 /// 助手页上的桌宠。
 ///
@@ -28,23 +29,46 @@ class _Live2DStageState extends State<Live2DStage> {
   /// 已经播到第几个动作请求，免得 rebuild 时把同一个动作反复播。
   int _appliedSeq = 0;
 
+  /// 当前装着的是哪套模型。设置里换了模型就跟它比一比，决定要不要重新加载。
+  Live2DVariant? _loaded;
+
   @override
   void initState() {
     super.initState();
     Live2DActor.instance.addListener(_onChanged);
+    SettingsService.instance.addListener(_onSettingsChanged);
     unawaited(_load());
   }
 
   @override
   void dispose() {
     Live2DActor.instance.removeListener(_onChanged);
+    SettingsService.instance.removeListener(_onSettingsChanged);
     _controller.dispose();
     super.dispose();
   }
 
+  void _onSettingsChanged() {
+    if (SettingsService.instance.live2dVariant != _loaded) {
+      unawaited(_load());
+    }
+  }
+
   Future<void> _load() async {
+    final Live2DVariant variant = SettingsService.instance.live2dVariant;
     try {
       await _controller.whenAttached;
+      // 换模型时先把手上这套卸掉，免得两套资源叠在一起
+      if (_loaded != null) {
+        await _controller.unloadModel();
+        _loaded = null;
+        if (mounted) {
+          setState(() {
+            _ready = false;
+            _error = null;
+          });
+        }
+      }
       // 原生侧有个竞态：loadModel 请求可能赶在 surface 尺寸就绪之前被处理，那时它
       // 会直接返回 false——不是路径或资源的问题。等一小会儿再试就好了。
       bool ok = false;
@@ -53,8 +77,8 @@ class _Live2DStageState extends State<Live2DStage> {
           await Future<void>.delayed(const Duration(milliseconds: 150));
         }
         ok = await _controller.loadModel(
-          modelDir: Live2DActor.modelDir,
-          modelFileName: Live2DActor.modelFileName,
+          modelDir: variant.modelDir,
+          modelFileName: variant.modelFileName,
         );
       }
       if (!mounted) {
@@ -64,6 +88,7 @@ class _Live2DStageState extends State<Live2DStage> {
         setState(() => _error = '桌宠模型没能加载出来');
         return;
       }
+      _loaded = variant;
       setState(() => _ready = true);
       // 加载这段时间里 AI 可能已经说过话了，补一次让桌宠跟上当前状态
       await _sync();
