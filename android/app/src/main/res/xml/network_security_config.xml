@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  明文（http）流量白名单。
+
+  Android 9 起默认禁止明文请求，而「今天吃什么」那个站是自建的、跑在 IP 上的
+  http 服务，没有证书。这里只对它的域名放行，其他站还是强制走 https。
+
+  站点换地址时记得同步改这里（ip 变了、或者以后上了域名）。
+-->
+<network-security-config>
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="false">47.76.117.170</domain>
+    </domain-config>
+</network-security-config>

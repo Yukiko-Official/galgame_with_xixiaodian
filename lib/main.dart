@@ -5,6 +5,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 
 import 'pages/assistant_config_page.dart';
 import 'pages/assistant_page.dart';
+import 'pages/food_page.dart';
 import 'pages/login_page.dart';
 import 'pages/plan_page.dart';
 import 'pages/timetable_page.dart';
@@ -66,7 +67,7 @@ class HomeShell extends StatefulWidget {
 
 class _HomeShellState extends State<HomeShell> {
   /// 培养方案在 [_pages] 里的位置，登录完会自动切过去。
-  static const int _planTabIndex = 2;
+  static const int _planTabIndex = 3;
 
   int _index = 0;
 
@@ -80,8 +81,9 @@ class _HomeShellState extends State<HomeShell> {
   static const _pages = <Widget>[
     AssistantPage(),   // 0 助手
     TimetablePage(),   // 1 课表
-    PlanPage(),        // 2 培养方案
-    SettingsPage(),    // 3 设置
+    FoodPage(),        // 2 今天吃什么
+    PlanPage(),        // 3 培养方案
+    SettingsPage(),    // 4 设置
   ];
 
   @override
@@ -142,6 +144,11 @@ class _HomeShellState extends State<HomeShell> {
             icon: Icon(Icons.calendar_month_outlined),
             selectedIcon: Icon(Icons.calendar_month),
             label: '课表',
+          ),
+          const NavigationDestination(
+            icon: Icon(Icons.restaurant_outlined),
+            selectedIcon: Icon(Icons.restaurant),
+            label: '今天吃什么',
           ),
           const NavigationDestination(
             icon: Icon(Icons.school_outlined),

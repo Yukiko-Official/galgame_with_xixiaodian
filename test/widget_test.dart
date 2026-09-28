@@ -3,12 +3,13 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:galgame_with_xixiaodian/main.dart';
 
 void main() {
-  testWidgets('启动后停在助手页，底部四个入口都在', (WidgetTester tester) async {
+  testWidgets('启动后停在助手页，底部五个入口都在', (WidgetTester tester) async {
     await tester.pumpWidget(const XidianHelperApp());
     await tester.pumpAndSettle();
 
     // 底部导航的入口
     expect(find.text('课表'), findsOneWidget);
+    expect(find.text('今天吃什么'), findsOneWidget);
     expect(find.text('培养方案'), findsOneWidget);
     expect(find.text('设置'), findsOneWidget);
     // 「西小电」会出现两次：顶部标题和底部入口
