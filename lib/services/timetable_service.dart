@@ -262,14 +262,25 @@ class TimetableService extends ChangeNotifier {
   /// 本地缓存 key 前缀，后面拼账号标识，数据按账号隔离。
   static const String _cachePrefix = 'timetable_cache_';
 
+  /// 上次抓取时间的 key 前缀。故意挂在 [_cachePrefix] 底下，
+  /// 这样「清除本地缓存」一按前缀扫就把时间一起带走了。
+  static const String _fetchedAtPrefix = '${_cachePrefix}at_';
+
+  /// 距上次抓取超过这么久，进课表页就自动再抓一次。
+  ///
+  /// 学校时不时因为调休调整上课安排，一周刷一次能跟上，不用等人自己点「重新获取」。
+  static const Duration refreshInterval = Duration(days: 7);
+
   final FlutterSecureStorage _storage = const FlutterSecureStorage();
 
   TimetableData? _data;
   bool _loading = false;
   String _status = '';
   String? _error;
-  bool _autoAttempted = false;
   String? _ownerKey;
+
+  /// 上次成功抓到课表的时间；缓存里没记就是 null。
+  DateTime? _fetchedAt;
 
   TimetableData? get data => _data;
   bool get loading => _loading;
@@ -278,8 +289,14 @@ class TimetableService extends ChangeNotifier {
   String get status => _status;
   String? get error => _error;
 
-  /// 已经自动尝试过一次了，避免每次切回课表页都重抓。
-  bool get autoAttempted => _autoAttempted;
+  /// 手上的课表该不该刷了：没数据，或者距上次抓取超过 [refreshInterval]。
+  bool get needsRefresh {
+    final DateTime? at = _fetchedAt;
+    if (at == null) {
+      return true;
+    }
+    return DateTime.now().difference(at) >= refreshInterval;
+  }
 
   /// 登录成功（或 App 启动时恢复登录态）后调用，数据和账号绑定。
   Future<void> onLoginSuccess() async {
@@ -294,7 +311,7 @@ class TimetableService extends ChangeNotifier {
     _data = null;
     _error = null;
     _status = '';
-    _autoAttempted = false;
+    _fetchedAt = null;
     notifyListeners();
 
     final TimetableData? cached = await _loadCache(owner);
@@ -310,7 +327,7 @@ class TimetableService extends ChangeNotifier {
     _data = null;
     _error = null;
     _status = '';
-    _autoAttempted = false;
+    _fetchedAt = null;
     notifyListeners();
   }
 
@@ -326,16 +343,24 @@ class TimetableService extends ChangeNotifier {
   }
 
   Future<void> _saveCache(String owner, TimetableData data) async {
+    final DateTime now = DateTime.now();
+    _fetchedAt = now;
     try {
       await _storage.write(
         key: '$_cachePrefix$owner',
         value: jsonEncode(data.toJson()),
+      );
+      await _storage.write(
+        key: '$_fetchedAtPrefix$owner',
+        value: now.toIso8601String(),
       );
     } catch (_) {
       // 缓存写失败不影响功能，下次重抓就是了
     }
   }
 
+  /// 读缓存。顺带把上次抓取的时间也读出来挂到 [_fetchedAt] 上，
+  /// 好让 [needsRefresh] 判断要不要重抓。
   Future<TimetableData?> _loadCache(String owner) async {
     try {
       final String? raw = await _storage.read(key: '$_cachePrefix$owner');
@@ -344,6 +369,8 @@ class TimetableService extends ChangeNotifier {
       }
       final Object? decoded = jsonDecode(raw);
       if (decoded is Map<String, dynamic>) {
+        final String? at = await _storage.read(key: '$_fetchedAtPrefix$owner');
+        _fetchedAt = at == null ? null : DateTime.tryParse(at);
         return TimetableData.fromJson(decoded);
       }
     } catch (_) {}
@@ -355,7 +382,7 @@ class TimetableService extends ChangeNotifier {
     _data = null;
     _error = null;
     _status = '';
-    _autoAttempted = false;
+    _fetchedAt = null;
     notifyListeners();
     try {
       final Map<String, String> all = await _storage.readAll();
@@ -458,7 +485,6 @@ class TimetableService extends ChangeNotifier {
     }
     _loading = true;
     _error = null;
-    _autoAttempted = true;
     notifyListeners();
 
     try {

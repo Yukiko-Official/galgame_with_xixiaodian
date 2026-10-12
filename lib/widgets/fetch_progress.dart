@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'f7d_loading.dart';
+
 /// 抓取数据时的全屏等待动画。
 ///
 /// 课表和培养方案都是「在后台的 WebView 里跑脚本把数据抓下来」，过程中不该让学校的
@@ -20,8 +22,8 @@ class FetchProgress extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
-              const CircularProgressIndicator(),
-              const SizedBox(height: 20),
+              const F7dLoading(size: 160),
+              const SizedBox(height: 28),
               Text(
                 status.isEmpty ? '正在获取…' : status,
                 textAlign: TextAlign.center,

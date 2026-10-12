@@ -57,16 +57,21 @@ class _TimetablePageState extends State<TimetablePage> {
     }
   }
 
-  /// 第一次进来且手上有登录态的话，自动抓一次。
+  /// 第一次进来、或者手上的课表放太久了，自动抓一次。
+  ///
+  /// 「放太久」是给调休留的余地：学校时不时调整上课安排，隔一周刷一次能跟上，
+  /// 不用等人自己去点「重新获取」。
   void _maybeAutoFetch() {
     final TimetableService service = TimetableService.instance;
-    if (service.data != null ||
-        service.loading ||
-        service.autoAttempted ||
-        service.error != null) {
+    if (service.loading || service.error != null) {
       return;
     }
     if (!AuthService.instance.isLoggedIn) {
+      return;
+    }
+    // 手上有数据、数据又还新鲜，就什么都不用做；
+    // 没数据、或者距上次抓取超过一周（调休会改课表）才需要动手
+    if (service.data != null && !service.needsRefresh) {
       return;
     }
     // 等这一帧画完再动手，免得在 build 过程中触发状态更新
