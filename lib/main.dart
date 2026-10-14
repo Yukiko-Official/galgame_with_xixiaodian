@@ -28,11 +28,6 @@ Future<void> main() async {
     await PlanService.instance.onLoginSuccess();
     await TimetableService.instance.onLoginSuccess();
   }
-  // 手上有课表就顺手把上课提醒重排一遍（系统重启后会丢排期）
-  final TimetableData? timetable = TimetableService.instance.data;
-  if (timetable != null) {
-    await NotificationService.instance.scheduleClassReminders(timetable);
-  }
   runApp(const XidianHelperApp());
 }
 
@@ -65,9 +60,12 @@ class HomeShell extends StatefulWidget {
   State<HomeShell> createState() => _HomeShellState();
 }
 
-class _HomeShellState extends State<HomeShell> {
+class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
   /// 培养方案在 [_pages] 里的位置，登录完会自动切过去。
   static const int _planTabIndex = 3;
+
+  /// 助手页在 [_pages] 里的位置。
+  static const int _assistantTabIndex = 0;
 
   int _index = 0;
 
@@ -89,17 +87,43 @@ class _HomeShellState extends State<HomeShell> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     // 登录成功后要自动跳到培养方案页
     PlanService.instance.addListener(_onPlanChanged);
     // 彩蛋改的是西小电的名字，导航栏得跟着变
     SettingsService.instance.addListener(_onSettingsChanged);
+    // 点主动消息通知就切回助手页
+    NotificationService.instance.onProactiveTapped = _openAssistantTab;
+    // 启动时停在助手页且 App 在前台，算作正在看
+    AssistantService.instance.chatVisible = true;
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     PlanService.instance.removeListener(_onPlanChanged);
     SettingsService.instance.removeListener(_onSettingsChanged);
+    NotificationService.instance.onProactiveTapped = null;
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // 只有前台且停在助手页时，主动发言才不重复弹通知
+    AssistantService.instance.chatVisible =
+        state == AppLifecycleState.resumed && _index == _assistantTabIndex;
+  }
+
+  /// 切到助手页，通知点击时用。
+  void _openAssistantTab() {
+    if (!mounted) {
+      return;
+    }
+    setState(() {
+      _index = _assistantTabIndex;
+      _visited.add(_assistantTabIndex);
+      AssistantService.instance.chatVisible = true;
+    });
   }
 
   void _onSettingsChanged() {
@@ -133,6 +157,7 @@ class _HomeShellState extends State<HomeShell> {
         onDestinationSelected: (int i) => setState(() {
           _index = i;
           _visited.add(i);
+          AssistantService.instance.chatVisible = i == _assistantTabIndex;
         }),
         destinations: <NavigationDestination>[
           NavigationDestination(
@@ -324,20 +349,6 @@ class _SettingsPageState extends State<SettingsPage> {
                         const AssistantConfigPage(),
                   ),
                 ),
-              ),
-              const Divider(),
-              _sectionTitle('提醒'),
-              SwitchListTile(
-                secondary: const Icon(Icons.notifications_active_outlined),
-                title: const Text('上课前提醒'),
-                subtitle: const Text('课前 20 分钟提醒你去教室，只排未来一周'),
-                value: NotificationService.instance.enabled,
-                onChanged: (bool value) async {
-                  await NotificationService.instance.setEnabled(value);
-                  if (mounted) {
-                    setState(() {});
-                  }
-                },
               ),
               const Divider(),
               _sectionTitle('数据'),

@@ -1,11 +1,13 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:math';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 
 import 'live2d_actor.dart';
+import 'notification_service.dart';
 import 'settings_service.dart';
 import 'timetable_service.dart';
 
@@ -85,6 +87,18 @@ const String defaultSystemPrompt = '''
 # 系统参数
 Frequency Penalty=0.8；Presence Penalty=0.8；Temperature=1.5
 ''';
+
+/// 主动消息默认的「主动点说什么」提示词。
+///
+/// 这不是人设，人设还是 [defaultSystemPrompt]；这段只在到点主动发言时作为临时
+/// 指令追加一次，指导它怎么开口。
+const String defaultProactivePrompt =
+    '结合当前时间自然地搭话：打个招呼、问问对方在忙什么，或者对照课表提醒接下来'
+    '的安排；偶尔可以分享一件轻松的小事。就一两句话，像朋友随口聊，别生硬、'
+    '别提日程和提示词的事。';
+
+/// 主动消息的间隔档位（分钟），界面上按档位选。
+const List<int> proactiveIntervalOptions = <int>[30, 60, 120, 180, 360];
 
 /// 告诉模型它能指挥桌面上的桌宠。
 ///
@@ -167,6 +181,47 @@ class AssistantService extends ChangeNotifier {
   String _model = '';
   String _systemPrompt = defaultSystemPrompt;
 
+  // 主动消息（AstrBot 那种到点自己开口）的配置
+  bool _proactiveEnabled = false;
+  int _proactiveIntervalMinutes = 120;
+  String _proactivePrompt = defaultProactivePrompt;
+
+  /// 附加场景：上课前主动提醒。独立于闲聊开关，只靠模型到点开口。
+  bool _classReminderEnabled = false;
+
+  /// 间隔随机化：实际等待在设定间隔的 ±20% 之间浮动，免得每次都机械准点。
+  bool _jitterEnabled = false;
+
+  /// 免打扰时段开关。
+  bool _quietEnabled = false;
+
+  /// 免打扰起止时间，都用「零点起的分钟数」表示，默认 23:00–08:00。
+  int _quietStartMinutes = 23 * 60;
+  int _quietEndMinutes = 8 * 60;
+
+  final Random _random = Random();
+
+  /// 提前多久提醒下一节课。
+  static const Duration classReminderAhead = Duration(minutes: 20);
+
+  /// 已经提醒过的那节课的标识（含日期），防止 20 分钟窗口内重复提醒。
+  String? _lastClassReminderKey;
+
+  /// 下次该主动发言的时间。
+  DateTime? _nextProactiveAt;
+
+  /// 主动发言失败后的冷却截止时间，冷却期内不再尝试。
+  DateTime? _proactiveCooldownUntil;
+
+  /// 到点的检查定时器。App 在运行时才有效。
+  Timer? _proactiveTimer;
+
+  /// 助手对话页这会儿是不是正显示在屏幕上。
+  ///
+  /// 在前台且正看着聊天页时，主动发言直接冒气泡就够了，不再弹通知；页面不在
+  /// 眼前才发通知提醒。由外层（HomeShell）结合 tab 和前后台状态维护。
+  bool _chatVisible = false;
+
   final List<ChatMessage> _messages = <ChatMessage>[];
   bool _sending = false;
   String? _error;
@@ -200,6 +255,36 @@ class AssistantService extends ChangeNotifier {
   bool get sending => _sending;
   String? get error => _error;
 
+  /// 主动消息开着没。
+  bool get proactiveEnabled => _proactiveEnabled;
+
+  /// 主动消息的间隔（分钟）。
+  int get proactiveIntervalMinutes => _proactiveIntervalMinutes;
+
+  /// 主动发言的提示词。
+  String get proactivePrompt => _proactivePrompt;
+
+  /// 上课前主动提醒开着没。
+  bool get classReminderEnabled => _classReminderEnabled;
+
+  /// 间隔随机化开着没。
+  bool get jitterEnabled => _jitterEnabled;
+
+  /// 免打扰时段开着没。
+  bool get quietEnabled => _quietEnabled;
+
+  /// 免打扰开始时间（零点起分钟数）。
+  int get quietStartMinutes => _quietStartMinutes;
+
+  /// 免打扰结束时间（零点起分钟数）。
+  int get quietEndMinutes => _quietEndMinutes;
+
+  /// 下次主动发言的时间，界面上可以拿来显示倒计时。
+  DateTime? get nextProactiveAt => _nextProactiveAt;
+
+  /// 对话页是否正在显示，由外层设置。
+  set chatVisible(bool value) => _chatVisible = value;
+
   /// 从本地恢复配置，App 启动时调一次。
   Future<void> restore() async {
     try {
@@ -215,12 +300,56 @@ class AssistantService extends ChangeNotifier {
           _systemPrompt = storedPrompt.isEmpty
               ? defaultSystemPrompt
               : storedPrompt;
+          _proactiveEnabled = decoded['proactiveEnabled'] == true;
+          final Object? interval = decoded['proactiveInterval'];
+          if (interval is num && interval.toInt() > 0) {
+            _proactiveIntervalMinutes = interval.toInt();
+          }
+          final String storedProactivePrompt =
+              '${decoded['proactivePrompt'] ?? ''}';
+          if (storedProactivePrompt.isNotEmpty) {
+            _proactivePrompt = storedProactivePrompt;
+          }
+          _classReminderEnabled = decoded['classReminderEnabled'] == true;
+          _jitterEnabled = decoded['jitterEnabled'] == true;
+          _quietEnabled = decoded['quietEnabled'] == true;
+          final Object? quietStart = decoded['quietStart'];
+          final Object? quietEnd = decoded['quietEnd'];
+          if (quietStart is num) {
+            _quietStartMinutes = quietStart.toInt();
+          }
+          if (quietEnd is num) {
+            _quietEndMinutes = quietEnd.toInt();
+          }
+          final String? reminderKey = decoded['classReminderKey'] as String?;
+          if (reminderKey != null && reminderKey.isNotEmpty) {
+            _lastClassReminderKey = reminderKey;
+          }
+          final Object? nextMs = decoded['proactiveNext'];
+          if (nextMs is num) {
+            final DateTime scheduled = DateTime.fromMillisecondsSinceEpoch(
+              nextMs.toInt(),
+            );
+            // 关机错过的时间不长（还没超过一个间隔）就补发；错过太久说明隔了
+            // 好几天，一打开就冒条消息挺吓人，改成重新计时
+            if (scheduled.isAfter(DateTime.now()) ||
+                DateTime.now().difference(scheduled) <
+                    Duration(minutes: _proactiveIntervalMinutes)) {
+              _nextProactiveAt = scheduled;
+            }
+          }
         }
       }
     } catch (_) {}
     if (_model.isEmpty && provider.models.isNotEmpty) {
       _model = provider.models.first;
     }
+    if (_proactiveEnabled && _nextProactiveAt == null) {
+      _nextProactiveAt = DateTime.now().add(
+        Duration(minutes: _proactiveIntervalMinutes),
+      );
+    }
+    _startProactiveScheduler();
     notifyListeners();
   }
 
@@ -231,6 +360,14 @@ class AssistantService extends ChangeNotifier {
     required String baseUrl,
     required String model,
     required String systemPrompt,
+    required bool proactiveEnabled,
+    required int proactiveIntervalMinutes,
+    required String proactivePrompt,
+    required bool classReminderEnabled,
+    required bool jitterEnabled,
+    required bool quietEnabled,
+    required int quietStartMinutes,
+    required int quietEndMinutes,
   }) async {
     _providerId = providerId;
     _apiKey = apiKey.trim();
@@ -239,7 +376,40 @@ class AssistantService extends ChangeNotifier {
     _systemPrompt = systemPrompt.trim().isEmpty
         ? defaultSystemPrompt
         : systemPrompt.trim();
+
+    _proactiveEnabled = proactiveEnabled;
+    _proactiveIntervalMinutes = proactiveIntervalMinutes > 0
+        ? proactiveIntervalMinutes
+        : 120;
+    final String trimmedProactive = proactivePrompt.trim();
+    _proactivePrompt = trimmedProactive.isEmpty
+        ? defaultProactivePrompt
+        : trimmedProactive;
+
+    _classReminderEnabled = classReminderEnabled;
+    _jitterEnabled = jitterEnabled;
+    _quietEnabled = quietEnabled;
+    _quietStartMinutes = quietStartMinutes;
+    _quietEndMinutes = quietEndMinutes;
+
+    // 每次保存都按新设置重新计时，直觉上好预测
+    if (_proactiveEnabled) {
+      _nextProactiveAt = _scheduleNext(from: DateTime.now());
+    } else {
+      _nextProactiveAt = null;
+    }
+    // 两个主动场景开一个就把通知权限要了，真到点时才弹得出来
+    if (_proactiveEnabled || _classReminderEnabled) {
+      unawaited(NotificationService.instance.requestPermissions());
+    }
+    _startProactiveScheduler();
+
     notifyListeners();
+    await _persistConfig();
+  }
+
+  /// 把当前配置（含主动消息的下次时间）整体写回本地。
+  Future<void> _persistConfig() async {
     try {
       await _storage.write(
         key: _configKey,
@@ -249,6 +419,16 @@ class AssistantService extends ChangeNotifier {
           'baseUrl': _customBaseUrl,
           'model': _model,
           'systemPrompt': _systemPrompt,
+          'proactiveEnabled': _proactiveEnabled,
+          'proactiveInterval': _proactiveIntervalMinutes,
+          'proactivePrompt': _proactivePrompt,
+          'proactiveNext': _nextProactiveAt?.millisecondsSinceEpoch,
+          'classReminderEnabled': _classReminderEnabled,
+          'classReminderKey': _lastClassReminderKey,
+          'jitterEnabled': _jitterEnabled,
+          'quietEnabled': _quietEnabled,
+          'quietStart': _quietStartMinutes,
+          'quietEnd': _quietEndMinutes,
         }),
       );
     } catch (_) {}
@@ -286,6 +466,346 @@ class AssistantService extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// 启动到点检查。重复调也只会有一个定时器。
+  ///
+  /// 两个触发源共用这一个定时器：闲聊到点（[speakProactively]）和
+  /// 上课前提醒（[_checkUpcomingClass]）。
+  void _startProactiveScheduler() {
+    _proactiveTimer ??= Timer.periodic(
+      const Duration(seconds: 30),
+      (Timer _) {
+        if (!isConfigured || _sending) {
+          return;
+        }
+        if (!_proactiveEnabled && !_classReminderEnabled) {
+          return;
+        }
+        final DateTime now = DateTime.now();
+        final DateTime? cooldown = _proactiveCooldownUntil;
+        if (cooldown != null && now.isBefore(cooldown)) {
+          return;
+        }
+
+        if (_proactiveEnabled) {
+          final DateTime? next = _nextProactiveAt;
+          if (next != null && !now.isBefore(next)) {
+            // 到点了但正处在免打扰时段：推到时段结束，那会儿再开口
+            if (_inQuietHours(now)) {
+              final DateTime? quietEnd = _quietEndAfter(now);
+              if (quietEnd != null) {
+                _nextProactiveAt = quietEnd;
+                unawaited(_persistConfig());
+                return;
+              }
+            }
+            unawaited(speakProactively());
+            return;
+          }
+        }
+        if (_classReminderEnabled) {
+          // 上课提醒是功能性的，免打扰时段也照常提醒
+          _checkUpcomingClass();
+        }
+      },
+    );
+  }
+
+  /// 下一轮要等多久。开了随机化就在间隔的 ±20% 之间随机取。
+  Duration _proactiveDelay() {
+    final Duration base = Duration(minutes: _proactiveIntervalMinutes);
+    if (!_jitterEnabled) {
+      return base;
+    }
+    final double factor = 0.8 + _random.nextDouble() * 0.4;
+    return Duration(microseconds: (base.inMicroseconds * factor).round());
+  }
+
+  /// 某一刻是不是落在免打扰时段里。起止相同视为没设置，不拦截。
+  bool _inQuietHours(DateTime time) {
+    if (!_quietEnabled || _quietStartMinutes == _quietEndMinutes) {
+      return false;
+    }
+    final int minutes = time.hour * 60 + time.minute;
+    if (_quietStartMinutes < _quietEndMinutes) {
+      // 同一天内的时段，比如 13:00–18:00
+      return minutes >= _quietStartMinutes && minutes < _quietEndMinutes;
+    }
+    // 跨零点的时段，比如 23:00–08:00
+    return minutes >= _quietStartMinutes || minutes < _quietEndMinutes;
+  }
+
+  /// [from] 之后第一个免打扰结束时刻；没开免打扰就返回 null。
+  DateTime? _quietEndAfter(DateTime from) {
+    if (!_quietEnabled || _quietStartMinutes == _quietEndMinutes) {
+      return null;
+    }
+    DateTime end = DateTime(
+      from.year,
+      from.month,
+      from.day,
+      _quietEndMinutes ~/ 60,
+      _quietEndMinutes % 60,
+    );
+    if (!end.isAfter(from)) {
+      end = end.add(const Duration(days: 1));
+    }
+    return end;
+  }
+
+  /// 从 [from] 起算下次发言时间：先加一轮间隔，若落进免打扰时段就推到时段结束。
+  DateTime _scheduleNext({required DateTime from}) {
+    DateTime target = from.add(_proactiveDelay());
+    final DateTime? quietEnd = _quietEndAfter(target);
+    if (quietEnd != null && _inQuietHours(target)) {
+      target = quietEnd;
+    }
+    return target;
+  }
+
+  /// 把下次主动发言时间顺延一个间隔。刚聊完天时调用，免得转头又来搭话。
+  void _deferProactive() {
+    if (!_proactiveEnabled) {
+      return;
+    }
+    _nextProactiveAt = _scheduleNext(from: DateTime.now());
+    unawaited(_persistConfig());
+  }
+
+  /// 拼主动发言时临时追加的那条指令。
+  ///
+  /// 人设和历史照发，只在最后补一条 system 告诉它「现在没人提问，轮到你主动
+  /// 开口」，这条不进聊天历史。
+  String _buildProactiveInstruction() {
+    const List<String> weekdays = <String>[
+      '一',
+      '二',
+      '三',
+      '四',
+      '五',
+      '六',
+      '日',
+    ];
+    final DateTime now = DateTime.now();
+    final String hh = now.hour.toString().padLeft(2, '0');
+    final String mm = now.minute.toString().padLeft(2, '0');
+    final String requirement = _proactivePrompt.trim().isEmpty
+        ? defaultProactivePrompt
+        : _proactivePrompt.trim();
+    return '【系统】现在是定时的主动发言时间，用户并没有发消息。请直接以'
+        '${SettingsService.instance.assistantName}的身份主动开口，'
+        '不要提及这是安排好的、不要解释原因。要求：$requirement '
+        '当前时间：星期${weekdays[now.weekday - 1]} $hh:$mm。';
+  }
+
+  /// 检查「下一节课是不是快开始了」，是就主动提醒一次。
+  ///
+  /// 取代原来往系统闹钟里预排固定文案的做法：到点了让模型结合课表用自己的
+  /// 语气开口，跟普通主动消息走同一条流式气泡/通知链路。同一节课用
+  /// [_lastClassReminderKey] 去重，只提醒一次。
+  void _checkUpcomingClass() {
+    if (_sending) {
+      return;
+    }
+    final TimetableData? data = TimetableService.instance.data;
+    if (data == null) {
+      return;
+    }
+    final DateTime now = DateTime.now();
+    final DateTime today = DateTime(now.year, now.month, now.day);
+    final int week = data.weekOf(today);
+    if (week < 1 || (data.weekCount > 0 && week > data.weekCount)) {
+      return;
+    }
+
+    DateTime? nextBegin;
+    CourseArrangement? nextItem;
+    for (final CourseArrangement item in data.arrangements) {
+      if (item.day != today.weekday || !item.inWeek(week)) {
+        continue;
+      }
+      final DateTime? begin = _classBeginTime(
+        today,
+        item.startSection,
+        item.endSection,
+      );
+      if (begin == null) {
+        continue;
+      }
+      final Duration diff = begin.difference(now);
+      // 已经开始的不提醒，还没进入提前窗口的也先不管
+      if (diff < Duration.zero || diff > classReminderAhead) {
+        continue;
+      }
+      if (nextBegin == null || begin.isBefore(nextBegin)) {
+        nextBegin = begin;
+        nextItem = item;
+      }
+    }
+    if (nextBegin == null || nextItem == null) {
+      return;
+    }
+
+    final String key =
+        '${today.year}-${today.month}-${today.day}-'
+        '${nextItem.courseIndex}-${nextItem.startSection}-'
+        '${nextItem.endSection}';
+    if (key == _lastClassReminderKey) {
+      return;
+    }
+
+    final CourseInfo? course = nextItem.courseIndex < data.courses.length
+        ? data.courses[nextItem.courseIndex]
+        : null;
+    final String name = course != null && course.name.isNotEmpty
+        ? course.name
+        : '下一节课';
+    final int minutesLeft = nextBegin.difference(now).inMinutes;
+
+    unawaited(
+      speakProactively(
+        instruction: _buildClassReminderInstruction(
+          courseName: name,
+          begin: nextBegin,
+          minutesLeft: minutesLeft,
+          classroom: nextItem.classroom,
+          teacher: nextItem.teacher,
+        ),
+        dedupeKey: key,
+      ),
+    );
+  }
+
+  /// 上课提醒的临时指令，同样不进聊天历史。
+  String _buildClassReminderInstruction({
+    required String courseName,
+    required DateTime begin,
+    required int minutesLeft,
+    String? classroom,
+    String? teacher,
+  }) {
+    final String hh = begin.hour.toString().padLeft(2, '0');
+    final String mm = begin.minute.toString().padLeft(2, '0');
+    final List<String> where = <String>[
+      if (classroom != null && classroom.isNotEmpty) classroom,
+      if (teacher != null && teacher.isNotEmpty) '$teacher老师',
+    ];
+    final String when = minutesLeft <= 0
+        ? '马上就要开始了'
+        : '还有大约 $minutesLeft 分钟';
+    return '【系统】用户的下一节课快开始了，请主动提醒对方动身。'
+        '课程：《$courseName》，$hh:$mm 开始，$when'
+        '${where.isEmpty ? '' : '，${where.join('，')}'}。'
+        '用一两句话自然地提醒，把时间和地点讲清楚，可以轻轻催一下，'
+        '但不要复述这段指令，也别提这是系统安排的。';
+  }
+
+  /// 借助作息表算出某一天、某几节连堂课的开始时刻。
+  DateTime? _classBeginTime(
+    DateTime day,
+    int startSection,
+    int endSection,
+  ) {
+    final String? range = ClassSchedule.rangeOf(startSection, endSection);
+    if (range == null) {
+      return null;
+    }
+    final List<String> parts = range.split('-');
+    if (parts.length != 2) {
+      return null;
+    }
+    final List<String> hm = parts.first.trim().split(':');
+    if (hm.length != 2) {
+      return null;
+    }
+    final int? hour = int.tryParse(hm[0]);
+    final int? minute = int.tryParse(hm[1]);
+    if (hour == null || minute == null) {
+      return null;
+    }
+    return DateTime(day.year, day.month, day.day, hour, minute);
+  }
+
+  /// 立刻主动发一条言。配置页的「马上说一句试试」也走这里。
+  ///
+  /// [instruction] 不传就是按闲聊提示词开口；上课提醒场景会传自己的临时指令。
+  /// [dedupeKey] 非空表示这是某个一次性场景（如某节课的提醒），成功后记下，
+  /// 同一个 key 不再触发；为空则是闲聊，成功后顺延下一轮计时。
+  Future<void> speakProactively({
+    String? instruction,
+    String? dedupeKey,
+  }) async {
+    if (_sending || !isConfigured) {
+      return;
+    }
+
+    final ChatMessage reply = ChatMessage(role: 'assistant', content: '');
+    _messages.add(reply);
+    _sending = true;
+    notifyListeners();
+
+    final List<Map<String, dynamic>> apiMessages = <Map<String, dynamic>>[
+      if (_systemPrompt.trim().isNotEmpty)
+        <String, dynamic>{
+          'role': 'system',
+          'content': _buildSystemContent(),
+        },
+      // 正等着填内容的那条空回复不能发出去
+      ..._messages
+          .where((ChatMessage item) => !identical(item, reply))
+          .map((ChatMessage item) => item.toJson()),
+      <String, dynamic>{
+        'role': 'system',
+        'content': instruction ?? _buildProactiveInstruction(),
+      },
+    ];
+
+    bool ok = false;
+    try {
+      await _streamReply(reply: reply, apiMessages: apiMessages);
+      if (reply.content.trim().isEmpty) {
+        reply.content = '（模型没有返回内容）';
+      }
+      ok = true;
+    } catch (_) {
+      // 一个字都没收到就把空气泡撤掉
+      if (reply.content.isEmpty) {
+        _messages.remove(reply);
+      }
+    } finally {
+      _sending = false;
+      if (ok) {
+        _proactiveCooldownUntil = null;
+        if (dedupeKey != null) {
+          // 一次性场景：记下已提醒，同节课不再来
+          _lastClassReminderKey = dedupeKey;
+        }
+        // 不管是闲聊还是上课提醒，刚开口过就把闲聊顺延一轮，免得紧接着又搭话
+        _deferProactive();
+      } else {
+        // 主动消息失败不吓人，错误条也不弹；进 5 分钟冷却再悄悄重试
+        _proactiveCooldownUntil = DateTime.now().add(
+          const Duration(minutes: 5),
+        );
+      }
+      await _persistConfig();
+      notifyListeners();
+    }
+
+    // 没在看着聊天页才补一条系统通知，正在看就只冒气泡
+    if (ok && !_chatVisible) {
+      final String oneLine = reply.content
+          .replaceAll(RegExp(r'\s+'), ' ')
+          .trim();
+      final String body = oneLine.length <= 80
+          ? oneLine
+          : '${oneLine.substring(0, 80)}…';
+      await NotificationService.instance.showProactive(
+        SettingsService.instance.assistantName,
+        body,
+      );
+    }
+  }
+
   /// 发一条消息，回复边收边显示。
   Future<void> send(String text) async {
     final String content = text.trim();
@@ -305,9 +825,49 @@ class AssistantService extends ChangeNotifier {
     _sending = true;
     notifyListeners();
 
-    // 边吐字边解析：reply.content 只留能显示的部分，[act:...] 标记转成指令发给
-    // 桌宠。handled 记着已经执行过几条，不然同一句「笑一下」会随着后面的分片
-    // 被反复触发。
+    final List<Map<String, dynamic>> apiMessages = <Map<String, dynamic>>[
+      if (_systemPrompt.trim().isNotEmpty)
+        <String, dynamic>{
+          'role': 'system',
+          'content': _buildSystemContent(),
+        },
+      // 正等着填内容的那条空回复不能发出去
+      ..._messages
+          .where((ChatMessage item) => !identical(item, reply))
+          .map((ChatMessage item) => item.toJson()),
+    ];
+
+    try {
+      await _streamReply(reply: reply, apiMessages: apiMessages);
+      if (reply.content.trim().isEmpty) {
+        reply.content = '（模型没有返回内容）';
+      }
+      // 刚聊过就别马上又主动搭话，顺延一轮
+      _deferProactive();
+    } catch (e) {
+      // 一个字都没收到就把这条空气泡撤掉
+      if (reply.content.isEmpty) {
+        _messages.remove(reply);
+      }
+      _error = e is StateError ? e.message : '$e';
+    } finally {
+      _sending = false;
+      notifyListeners();
+    }
+  }
+
+  /// 跑一次流式补全，分片写进 [reply]。
+  ///
+  /// [apiMessages] 由调用方拼好——主动发言时要在末尾临时塞一条指令，又不能让它
+  /// 进聊天历史，所以不直接从 [_messages] 取。
+  ///
+  /// 边吐字边解析：reply.content 只留能显示的部分，[act:...] 标记转成指令发给
+  /// 桌宠。handled 记着已经执行过几条，不然同一句「笑一下」会随着后面的分片
+  /// 被反复触发。
+  Future<void> _streamReply({
+    required ChatMessage reply,
+    required List<Map<String, dynamic>> apiMessages,
+  }) async {
     final StringBuffer raw = StringBuffer();
     int handled = 0;
     void syncActor({required bool streaming}) {
@@ -337,17 +897,7 @@ class AssistantService extends ChangeNotifier {
           'temperature': _temperature,
           'frequency_penalty': _frequencyPenalty,
           'presence_penalty': _presencePenalty,
-          'messages': <Map<String, dynamic>>[
-            if (_systemPrompt.trim().isNotEmpty)
-              <String, dynamic>{
-                'role': 'system',
-                'content': _buildSystemContent(),
-              },
-            // 正等着填内容的那条空回复不能发出去
-            ..._messages
-                .where((ChatMessage item) => !identical(item, reply))
-                .map((ChatMessage item) => item.toJson()),
-          ],
+          'messages': apiMessages,
         });
 
       final http.StreamedResponse response = await client.send(request);
@@ -396,19 +946,8 @@ class AssistantService extends ChangeNotifier {
 
       // 收完了再解析一次，把流式时扣住的尾巴（半截标记）放出来
       syncActor(streaming: false);
-      if (reply.content.trim().isEmpty) {
-        reply.content = '（模型没有返回内容）';
-      }
-    } catch (e) {
-      // 一个字都没收到就把这条空气泡撤掉
-      if (reply.content.isEmpty) {
-        _messages.remove(reply);
-      }
-      _error = e is StateError ? e.message : '$e';
     } finally {
       client.close();
-      _sending = false;
-      notifyListeners();
     }
   }
 

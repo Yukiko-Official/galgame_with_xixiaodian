@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 
 import '../services/auth_service.dart';
-import '../services/notification_service.dart';
 import '../services/timetable_scripts.dart';
 import '../services/timetable_service.dart';
 import '../widgets/fetch_progress.dart';
@@ -49,11 +48,6 @@ class _TimetablePageState extends State<TimetablePage> {
     if (error != null) {
       _toast(error);
       return;
-    }
-    // 课表到手了，顺手把上课提醒排进系统闹钟
-    final TimetableData? data = service.data;
-    if (data != null) {
-      await NotificationService.instance.scheduleClassReminders(data);
     }
   }
 
