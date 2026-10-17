@@ -591,10 +591,12 @@ class AssistantService extends ChangeNotifier {
     final String requirement = _proactivePrompt.trim().isEmpty
         ? defaultProactivePrompt
         : _proactivePrompt.trim();
+    final String schedule = _buildWeeklyScheduleContext();
     return '【系统】现在是定时的主动发言时间，用户并没有发消息。请直接以'
         '${SettingsService.instance.assistantName}的身份主动开口，'
         '不要提及这是安排好的、不要解释原因。要求：$requirement '
-        '当前时间：星期${weekdays[now.weekday - 1]} $hh:$mm。';
+        '当前时间：星期${weekdays[now.weekday - 1]} $hh:$mm。'
+        '${schedule.isNotEmpty ? '\n\n参考信息：$schedule' : ''}';
   }
 
   /// 检查「下一节课是不是快开始了」，是就主动提醒一次。
@@ -723,6 +725,74 @@ class AssistantService extends ChangeNotifier {
       return null;
     }
     return DateTime(day.year, day.month, day.day, hour, minute);
+  }
+
+  /// 把当前周的课表按天整理成紧凑文本，给主动消息的 prompt 做上下文。
+  ///
+  /// 有课表才返回非空字符串；没课表或超出学期范围返回空串，调用方直接忽略。
+  /// 输出样例：
+  ///   本周课表（第3周）：
+  ///   周一：08:00 高数(A201,张老师), 10:00 英语(B305,李老师)
+  ///   周二：无课
+  String _buildWeeklyScheduleContext() {
+    final TimetableData? data = TimetableService.instance.data;
+    if (data == null || data.arrangements.isEmpty) {
+      return '';
+    }
+    final DateTime now = DateTime.now();
+    final int week = data.weekOf(now);
+    if (week < 1 || (data.weekCount > 0 && week > data.weekCount)) {
+      return '';
+    }
+
+    const List<String> dayLabels = <String>[
+      '周一',
+      '周二',
+      '周三',
+      '周四',
+      '周五',
+      '周六',
+      '周日',
+    ];
+
+    final StringBuffer buf = StringBuffer('本周课表（第$week周）：');
+
+    for (int d = 1; d <= 7; d++) {
+      final List<CourseArrangement> items = data.arrangements
+          .where((CourseArrangement a) => a.day == d && a.inWeek(week))
+          .toList()
+        ..sort((CourseArrangement a, CourseArrangement b) =>
+            a.startSection.compareTo(b.startSection));
+
+      buf.write('\n${dayLabels[d - 1]}：');
+      if (items.isEmpty) {
+        buf.write('无课');
+        continue;
+      }
+      final List<String> parts = <String>[];
+      for (final CourseArrangement item in items) {
+        final String? range = ClassSchedule.rangeOf(
+          item.startSection,
+          item.endSection,
+        );
+        final String time = range ?? '第${item.startSection}-${item.endSection}节';
+        final CourseInfo? course = item.courseIndex < data.courses.length
+            ? data.courses[item.courseIndex]
+            : null;
+        final String name = (course?.name ?? '').isNotEmpty
+            ? course!.name
+            : '未知课';
+        final List<String> tags = <String>[
+          if (item.classroom != null && item.classroom!.isNotEmpty)
+            item.classroom!,
+          if (item.teacher != null && item.teacher!.isNotEmpty) item.teacher!,
+        ];
+        final String suffix = tags.isNotEmpty ? '(${tags.join(',')})' : '';
+        parts.add('$time $name$suffix');
+      }
+      buf.write(parts.join('；'));
+    }
+    return buf.toString();
   }
 
   /// 立刻主动发一条言。配置页的「马上说一句试试」也走这里。
